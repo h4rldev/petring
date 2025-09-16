@@ -6,5 +6,6 @@ with pkgs;
     buildInputs = [
       rustup
       pkg-config
+      sqlite
     ];
   }

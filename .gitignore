@@ -2,3 +2,6 @@
 .cache
 node_modules
 dist
+target
+.env
+webring.db
