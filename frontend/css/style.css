@@ -1,0 +1,17 @@
+html {
+	--primary: #0d2222;
+  --secondary: #054f3f;
+  --thirdly: #043b2f;
+	--accent-1: #9f8083;
+	--accent-2: #66232e;
+	--accent-3: #44131a;
+	color: white;
+	background: var(--secondary);
+}
+
+.div-meow {
+	display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+	align-items: center;
+}
