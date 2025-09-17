@@ -17,13 +17,17 @@ html {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes counter-spin {
-  0% { transform: rotate(var(--base-rotation)); }
-  100% { transform: rotate(calc(var(--base-rotation) - 360deg)); }
+    0% {
+        transform: rotate(0)
+    }
+
+    to {
+        transform: rotate(-360deg)
+    }
 }
 
 .spin-parent {
@@ -61,4 +65,11 @@ html {
   --base-rotation: calc((360deg / var(--amount-of-element, 1)) * var(--nth-element, 1));
   transform: rotate(0);
   animation: counter-spin 40s linear infinite;
+}
+
+.spin-item-inner {
+	a {
+		display: inline-block;
+		transform: rotate(0deg);
+	}
 }
