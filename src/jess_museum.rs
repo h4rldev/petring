@@ -2,6 +2,7 @@ pub(crate) mod api;
 pub(crate) mod cli;
 pub(crate) mod config;
 pub(crate) mod database;
+pub(crate) mod jwt;
 pub(crate) mod state;
 
 pub(crate) type IoResult<T> = std::io::Result<T>;

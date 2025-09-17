@@ -1,10 +1,7 @@
 use super::{WebringResult, state::AppState};
 use crate::{
     APP_START,
-    jess_museum::database::{
-        entities::{MemberModel, Members},
-        members,
-    },
+    jess_museum::database::{entities::Members, members},
 };
 use askama::Template;
 use axum::{
