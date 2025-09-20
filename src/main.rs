@@ -1,11 +1,13 @@
+use askama::Template;
 use axum::{
     Router,
     body::Body,
     extract::Request,
     http::{Response, StatusCode},
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Response as AxumResponse},
     routing::{get, post},
 };
+use axum_extra::routing::RouterExt;
 use petring::{
     IoResult,
     api::{
@@ -23,11 +25,14 @@ use std::{
 };
 use tower::{ServiceBuilder, service_fn};
 use tower_http::{
+    CompressionLevel,
     compression::{
-        Predicate,
+        CompressionLayer, Predicate,
         predicate::{NotForContentType, SizeAbove},
     },
-    services::{ServeDir, ServeFile},
+    decompression::RequestDecompressionLayer,
+    services::ServeDir,
+    trace::{DefaultMakeSpan, TraceLayer},
 };
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
@@ -49,19 +54,35 @@ static APP_START: once_cell::sync::Lazy<u64> = once_cell::sync::Lazy::new(|| {
         .as_secs()
 });
 
+#[derive(Template)]
+#[template(path = "404.html")]
+struct NotFoundTemplate {
+    path: String,
+}
+
+struct HtmlTemplate<T>(T);
+
+impl<T> IntoResponse for HtmlTemplate<T>
+where
+    T: Template,
+{
+    fn into_response(self) -> AxumResponse {
+        match self.0.render() {
+            Ok(html) => Html(html).into_response(),
+            Err(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to render template. Error: {err}"),
+            )
+                .into_response(),
+        }
+    }
+}
+
 pub async fn render_404(_req: Request) -> Result<Response<Body>, Infallible> {
     let url = _req.uri().to_string();
 
-    Ok((
-        StatusCode::NOT_FOUND,
-        Html(format!(
-            "
-      <h1>404 Not Found</h1>
-      <p>The requested resource at {url} could not be found.</p>
-      "
-        )),
-    )
-        .into_response())
+    let not_found = NotFoundTemplate { path: url };
+    Ok(HtmlTemplate(not_found).into_response())
 }
 
 #[tokio::main]
@@ -91,63 +112,58 @@ async fn main() -> IoResult<()> {
         warn!("Root path is empty or failed to unwrap, will only resolve 404 page.");
     }
 
-    let error_page = config.site().error.clone().unwrap_or_else(|| {
-        error!("Invalid error page path");
-        PathBuf::new()
-    });
-
-    if !error_page.exists() || error_page.as_os_str().is_empty() {
-        warn!("Error page path is empty or failed to unwrap, Using hardcoded fallback error page.");
-    }
-
     debug!("root: {root:?}");
-    debug!("error page: {error_page:?}");
 
     let state = AppState::new().await;
 
     let compression_predicate = SizeAbove::new(256).and(NotForContentType::IMAGES);
 
-    let serve_public = ServeDir::new(root)
-        .not_found_service(ServeFile::new(error_page.clone()))
-        .fallback(service_fn(render_404));
+    let serve_public = ServeDir::new(root).not_found_service(service_fn(render_404));
 
     let user_routes = Router::new()
-        .route("/{username}", get(get_member))
-        .route("/{username}/next", get(get_member_next))
-        .route("/{username}/prev", get(get_member_prev))
-        .route("/{username}/random", get(get_member_random));
+        .route_with_tsr("/user/{username}", get(get_member))
+        .route_with_tsr("/user/{username}/next", get(get_member_next))
+        .route_with_tsr("/user/{username}/prev", get(get_member_prev))
+        .route_with_tsr("/user/{username}/random", get(get_member_random));
 
     // TODO: add protected routes
 
     let bot_routes = Router::new()
-        .route("/setup", post(post_bot_setup))
-        .route("/refresh", post(post_refresh_tokens));
+        .route_with_tsr("/bot/setup", post(post_bot_setup))
+        .route_with_tsr("/bot/refresh", post(post_refresh_tokens));
 
     let api_routes = Router::new()
-        .route("/", get(get_api_index))
-        .route("/server-info", get(get_server_info))
-        .route("/all-members", get(get_all_members))
-        .route("/uptime", get(get_uptime))
-        .route("/members", get(get_all_members));
+        .route_with_tsr("/api", get(get_api_index))
+        .route_with_tsr("/api/server-info", get(get_server_info))
+        .route_with_tsr("/api/all-members", get(get_all_members))
+        .route_with_tsr("/api/uptime", get(get_uptime))
+        .route_with_tsr("/api/members", get(get_all_members));
 
     let app = Router::new()
+        .fallback_service(serve_public)
+        .merge(api_routes)
+        .merge(user_routes)
+        .merge(bot_routes)
         .layer(
             ServiceBuilder::new()
-                .layer(tower_http::decompression::RequestDecompressionLayer::new())
                 .layer(
-                    tower_http::compression::CompressionLayer::new()
-                        .zstd(true)
-                        .gzip(true)
+                    TraceLayer::new_for_http().make_span_with(
+                        DefaultMakeSpan::new()
+                            .level(tracing::Level::INFO)
+                            .include_headers(false),
+                    ),
+                )
+                .layer(RequestDecompressionLayer::new())
+                .layer(
+                    CompressionLayer::new()
                         .no_br()
                         .no_deflate()
+                        .gzip(true)
+                        .zstd(true)
+                        .quality(CompressionLevel::Fastest)
                         .compress_when(compression_predicate),
                 ),
         )
-        .layer(tower_http::normalize_path::NormalizePathLayer::trim_trailing_slash())
-        .fallback_service(serve_public)
-        .nest("/api", api_routes)
-        .nest("/user", user_routes)
-        .nest("/bot", bot_routes)
         .with_state(state);
     //
     // This adds compression and decompression to the request and response

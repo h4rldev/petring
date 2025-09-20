@@ -26,31 +26,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Se
 use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::{fs::File, io::AsyncReadExt};
-use tracing::debug;
-
-#[derive(Template)]
-#[template(path = "iframe.html")]
-struct HelloTemplate {
-    name: String,
-}
-
-struct HtmlTemplate<T>(T);
-
-impl<T> IntoResponse for HtmlTemplate<T>
-where
-    T: Template,
-{
-    fn into_response(self) -> Response {
-        match self.0.render() {
-            Ok(html) => Html(html).into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to render template. Error: {err}"),
-            )
-                .into_response(),
-        }
-    }
-}
+use tracing::{debug, error};
 
 #[derive(Serialize)]
 pub(crate) struct CremeBruleeApiResponse {
@@ -153,10 +129,10 @@ pub async fn get_server_info() -> impl IntoResponse {
     petring_api_response(
         StatusCode::OK,
         ServerInfo {
-            name: "The Jess Museum petring".to_string(),
+            name: "Petring".to_string(),
             version: "0.0.1".to_string(),
-            description: "A petring for the Jess Museum Discord server".to_string(),
-            source: "https://github.com/h4rldev/jess-petring".to_string(),
+            description: "A webring for the Jess Museum Discord server".to_string(),
+            source: "https://github.com/h4rldev/petring".to_string(),
             authors: ["h4rl".to_string(), "Jess Museum".to_string()],
             license: "Undecided".to_string(),
             server_uptime: format_duration(app_uptime).to_string(),
@@ -173,12 +149,12 @@ struct UptimeResponse {
 
 pub async fn get_uptime() -> impl IntoResponse {
     let app_uptime = get_app_uptime().await.unwrap_or_else(|e| {
-        eprintln!("Error getting app uptime: {}", e);
+        error!("Error getting app uptime: {}", e);
         Duration::new(0, 0)
     });
 
     let system_uptime = get_system_uptime().await.unwrap_or_else(|e| {
-        eprintln!("Error getting system uptime: {}", e);
+        error!("Error getting system uptime: {}", e);
         Duration::new(0, 0)
     });
 

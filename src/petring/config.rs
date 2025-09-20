@@ -26,7 +26,6 @@ pub struct Config {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SiteConfig {
     pub root: Option<PathBuf>,
-    pub error: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -134,7 +133,6 @@ impl Config {
         Self {
             site: SiteConfig {
                 root: Some(PathBuf::from("static")),
-                error: Some(PathBuf::from("static/404.html")),
             },
             tls: TlsConfig {
                 cert: None,

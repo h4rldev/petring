@@ -5,7 +5,7 @@ error = "static/404.html"
 [tls]
 cert = ".certs/cert1.pem"
 key = ".certs/privkey1.pem"
-enable = true
+enable = false
 
 [network]
 # When tls is off, the http port will be the port
@@ -14,4 +14,4 @@ ip = "0.0.0.0"
 port = 8080
 
 [logging]
-level = "INFO"
+level = "DEBUG"
