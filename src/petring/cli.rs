@@ -8,7 +8,7 @@ use tracing::info;
 #[clap(
     author = "h4rl",
     version,
-    about = "A simple, fast and flexible web server template written in Rust with help of axum",
+    about = "A simple, fast and secure web ring for the Jess Museum Discord server",
     help_template = r#"
 {name} v{version} by {author}
 {about}
@@ -19,7 +19,7 @@ use tracing::info;
 "#
 )]
 pub struct Cli {
-    #[clap(short, long, default_value = "creme-brulee.toml")]
+    #[clap(short, long, default_value = "webring.toml")]
     pub config: PathBuf,
     #[clap(short, long, help = "Toggle TLS")]
     pub tls: bool,

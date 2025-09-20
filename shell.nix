@@ -1,7 +1,7 @@
 {pkgs ? import <nixpkgs> {}}:
 with pkgs;
   mkShell {
-    name = "jess-webring";
+    name = "petring";
     description = "A web ring for jess museum, built with axum :3";
     buildInputs = [
       rustup

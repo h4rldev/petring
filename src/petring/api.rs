@@ -1,24 +1,32 @@
-use super::{WebringResult, state::AppState};
+use super::{
+    PetRingResult,
+    database::{Members, members},
+    state::AppState,
+};
 use crate::{
     APP_START,
-    jess_museum::database::{entities::Members, members},
+    petring::jwt::{self, TokenError, TokenSecrets},
 };
+
 use askama::Template;
 use axum::{
     Json,
     body::Body,
     extract::{Path, State},
     http::{
-        HeaderMap, HeaderValue, StatusCode,
-        header::{CONTENT_DISPOSITION, CONTENT_LENGTH, CONTENT_TYPE, LOCATION},
+        HeaderMap, HeaderValue, Request, StatusCode,
+        header::{self, LOCATION},
     },
-    response::{Html, IntoResponse, Redirect, Response},
+    middleware::Next,
+    response::{Html, IntoResponse, Response},
 };
 use humantime::format_duration;
+use rand::{SeedableRng, rngs::StdRng, seq::IndexedRandom};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::{fs::File, io::AsyncReadExt};
+use tracing::debug;
 
 #[derive(Template)]
 #[template(path = "iframe.html")]
@@ -50,7 +58,7 @@ pub(crate) struct CremeBruleeApiResponse {
     pub message: String,
 }
 
-pub(crate) fn webring_api_err(status: StatusCode, message: &str) -> Response<Body> {
+pub(crate) fn petring_api_err(status: StatusCode, message: &str) -> Response<Body> {
     (
         status,
         Json(CremeBruleeApiResponse {
@@ -61,7 +69,7 @@ pub(crate) fn webring_api_err(status: StatusCode, message: &str) -> Response<Bod
         .into_response()
 }
 
-pub(crate) fn webring_api_response<T: Serialize>(status: StatusCode, message: T) -> Response<Body> {
+pub(crate) fn petring_api_response<T: Serialize>(status: StatusCode, message: T) -> Response<Body> {
     (status, Json(message)).into_response()
 }
 
@@ -102,13 +110,13 @@ struct ServerInfo {
     system_uptime: String,
 }
 
-async fn get_app_uptime() -> WebringResult<Duration> {
+async fn get_app_uptime() -> PetRingResult<Duration> {
     Ok(Duration::from_secs(
         SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() - *APP_START,
     ))
 }
 
-async fn get_system_uptime() -> WebringResult<Duration> {
+async fn get_system_uptime() -> PetRingResult<Duration> {
     let mut contents = String::new();
     let mut file = File::open("/proc/uptime").await?;
 
@@ -142,13 +150,13 @@ pub async fn get_server_info() -> impl IntoResponse {
         Duration::new(0, 0)
     });
 
-    webring_api_response(
+    petring_api_response(
         StatusCode::OK,
         ServerInfo {
-            name: "The Jess Museum Webring".to_string(),
+            name: "The Jess Museum petring".to_string(),
             version: "0.0.1".to_string(),
-            description: "A Webring for the Jess Museum Discord server".to_string(),
-            source: "https://github.com/h4rldev/jess-webring".to_string(),
+            description: "A petring for the Jess Museum Discord server".to_string(),
+            source: "https://github.com/h4rldev/jess-petring".to_string(),
             authors: ["h4rl".to_string(), "Jess Museum".to_string()],
             license: "Undecided".to_string(),
             server_uptime: format_duration(app_uptime).to_string(),
@@ -174,7 +182,7 @@ pub async fn get_uptime() -> impl IntoResponse {
         Duration::new(0, 0)
     });
 
-    webring_api_response(
+    petring_api_response(
         StatusCode::OK,
         UptimeResponse {
             app_uptime: format_duration(app_uptime).to_string(),
@@ -198,14 +206,14 @@ pub async fn get_member(
     {
         Ok(member) => member,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
         }
     };
 
     let member = match member {
         Some(member) => member,
         None => {
-            return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+            return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
         }
     };
 
@@ -229,14 +237,14 @@ pub async fn get_member_next(
     {
         Ok(member) => member,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
         }
     };
 
     let member = match member {
         Some(member) => member,
         None => {
-            return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+            return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
         }
     };
 
@@ -247,14 +255,14 @@ pub async fn get_member_next(
     {
         Ok(member) => member,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
         }
     };
 
     let is_last = match is_last {
         Some(member) => member,
         None => {
-            return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+            return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
         }
     };
 
@@ -267,7 +275,7 @@ pub async fn get_member_next(
         {
             Ok(member) => member,
             Err(_) => {
-                return webring_api_err(
+                return petring_api_err(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to fetch member",
                 );
@@ -277,7 +285,7 @@ pub async fn get_member_next(
         match _next_member {
             Some(member) => member,
             None => {
-                return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+                return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
             }
         }
     } else {
@@ -288,7 +296,7 @@ pub async fn get_member_next(
         {
             Ok(member) => member,
             Err(_) => {
-                return webring_api_err(
+                return petring_api_err(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to fetch member",
                 );
@@ -298,7 +306,7 @@ pub async fn get_member_next(
         match _next_member {
             Some(member) => member,
             None => {
-                return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+                return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
             }
         }
     };
@@ -324,14 +332,14 @@ pub async fn get_member_prev(
     {
         Ok(member) => member,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
         }
     };
 
     let member = match member {
         Some(member) => member,
         None => {
-            return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+            return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
         }
     };
 
@@ -343,14 +351,14 @@ pub async fn get_member_prev(
     {
         Ok(member) => member,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
         }
     };
 
     let is_first = match is_first {
         Some(member) => member,
         None => {
-            return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+            return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
         }
     };
 
@@ -364,7 +372,7 @@ pub async fn get_member_prev(
         {
             Ok(member) => member,
             Err(_) => {
-                return webring_api_err(
+                return petring_api_err(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to fetch member",
                 );
@@ -374,7 +382,7 @@ pub async fn get_member_prev(
         match _prev_member {
             Some(member) => member,
             None => {
-                return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+                return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
             }
         }
     } else {
@@ -386,7 +394,7 @@ pub async fn get_member_prev(
         {
             Ok(member) => member,
             Err(_) => {
-                return webring_api_err(
+                return petring_api_err(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to fetch member",
                 );
@@ -396,7 +404,7 @@ pub async fn get_member_prev(
         match _prev_member {
             Some(member) => member,
             None => {
-                return webring_api_err(StatusCode::NOT_FOUND, "Member not found");
+                return petring_api_err(StatusCode::NOT_FOUND, "Member not found");
             }
         }
     };
@@ -405,6 +413,60 @@ pub async fn get_member_prev(
     headermap.insert(
         LOCATION,
         HeaderValue::from_str(&prev_member.url).expect("Failed to insert header"),
+    );
+
+    (StatusCode::TEMPORARY_REDIRECT, headermap).into_response()
+}
+
+pub async fn get_member_random(
+    State(state): State<AppState>,
+    Path(username): Path<String>,
+) -> impl IntoResponse {
+    let current_member = match Members::find()
+        .filter(members::Column::Username.eq(username))
+        .filter(members::Column::Verified.eq(true))
+        .one(&state.db)
+        .await
+    {
+        Ok(member) => member,
+        Err(_) => {
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+        }
+    };
+
+    let current_member = match current_member {
+        Some(member) => member,
+        None => {
+            return petring_api_err(StatusCode::NOT_FOUND, "Couldn't pick a random member");
+        }
+    };
+
+    let member_seed = current_member.id << 16 | current_member.id;
+    let member_seed = member_seed as u64;
+    let mut rng = StdRng::seed_from_u64(member_seed);
+
+    let members = match Members::find()
+        .filter(members::Column::Verified.eq(true))
+        .all(&state.db)
+        .await
+    {
+        Ok(members) => members,
+        Err(_) => {
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch member");
+        }
+    };
+
+    let member = match members.choose(&mut rng) {
+        Some(member) => member,
+        None => {
+            return petring_api_err(StatusCode::NOT_FOUND, "Couldn't pick a random member");
+        }
+    };
+
+    let mut headermap = HeaderMap::new();
+    headermap.insert(
+        LOCATION,
+        HeaderValue::from_str(&member.url).expect("Failed to insert header"),
     );
 
     (StatusCode::TEMPORARY_REDIRECT, headermap).into_response()
@@ -429,11 +491,11 @@ pub async fn get_all_members(State(state): State<AppState>) -> impl IntoResponse
     {
         Ok(members) => members,
         Err(_) => {
-            return webring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch members");
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch members");
         }
     };
 
-    webring_api_response(
+    petring_api_response(
         StatusCode::OK,
         MembersResponse {
             members: members
@@ -445,4 +507,155 @@ pub async fn get_all_members(State(state): State<AppState>) -> impl IntoResponse
                 .collect(),
         },
     )
+}
+
+pub async fn get_random_member(State(state): State<AppState>) -> impl IntoResponse {
+    let members = match Members::find()
+        .filter(members::Column::Verified.eq(true))
+        .all(&state.db)
+        .await
+    {
+        Ok(members) => members,
+        Err(_) => {
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch members");
+        }
+    };
+
+    let member = match members.choose(&mut rand::rng()) {
+        Some(member) => member,
+        None => {
+            return petring_api_err(StatusCode::NOT_FOUND, "Couldn't pick a random member");
+        }
+    };
+
+    let mut headermap = HeaderMap::new();
+    headermap.insert(
+        LOCATION,
+        HeaderValue::from_str(&member.url).expect("Failed to insert header"),
+    );
+
+    (StatusCode::TEMPORARY_REDIRECT, headermap).into_response()
+}
+
+#[derive(Deserialize)]
+pub struct BotSetupRequest {
+    pub bot_token: String,
+}
+
+#[derive(Serialize)]
+pub struct BotSetupResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
+pub async fn post_bot_setup(
+    State(state): State<AppState>,
+    Json(bot_setup): Json<BotSetupRequest>,
+) -> impl IntoResponse {
+    let mut has_generated_jwt = state.has_generated_jwt.lock().await;
+
+    if *has_generated_jwt {
+        return petring_api_err(StatusCode::CONFLICT, "Bot already setup");
+    }
+
+    let bot_token = bot_setup.bot_token.clone();
+
+    if bot_token != state.bot_token {
+        return petring_api_err(StatusCode::UNAUTHORIZED, "Invalid bot token");
+    }
+
+    let token_secrets = state.token_secrets.lock().await;
+    let access_claims = jwt::Claims::new(&bot_token, jwt::TokenType::Access);
+    let access_token = match jwt::generate_token(access_claims, &token_secrets) {
+        Ok(token) => token,
+        Err(_) => {
+            return petring_api_err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to generate access token",
+            );
+        }
+    };
+
+    let refresh_claims = jwt::Claims::new(&bot_token, jwt::TokenType::Refresh);
+    let refresh_token = match jwt::generate_token(refresh_claims, &token_secrets) {
+        Ok(token) => token,
+        Err(_) => {
+            return petring_api_err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to generate refresh token",
+            );
+        }
+    };
+
+    *has_generated_jwt = true;
+
+    petring_api_response(
+        StatusCode::OK,
+        BotSetupResponse {
+            access_token,
+            refresh_token,
+        },
+    )
+}
+
+#[derive(Deserialize)]
+pub struct BotRefreshRequest {
+    pub refresh_token: String,
+    pub access_token: String,
+}
+
+type BotRefreshResponse = BotSetupResponse;
+pub async fn post_refresh_tokens(
+    State(state): State<AppState>,
+    Json(refresh_request): Json<BotRefreshRequest>,
+) -> impl IntoResponse {
+    let has_generated_jwt = state.has_generated_jwt.lock().await;
+
+    if !*has_generated_jwt {
+        return petring_api_err(StatusCode::NOT_FOUND, "Bot not setup");
+    }
+
+    let refresh_token = refresh_request.refresh_token.clone();
+    let access_token = refresh_request.access_token.clone();
+
+    let mut token_secrets = state.token_secrets.lock().await;
+    let (refreshed_access_token, refreshed_refresh_token) =
+        match jwt::refresh_token(&refresh_token, &mut token_secrets) {
+            Ok((access_token, refresh_token)) => (access_token, refresh_token),
+            Err(_) => {
+                return petring_api_err(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to refresh token",
+                );
+            }
+        };
+
+    token_secrets.blacklist_mut().add_token(&access_token);
+
+    petring_api_response(
+        StatusCode::OK,
+        BotRefreshResponse {
+            access_token: refreshed_access_token,
+            refresh_token: refreshed_refresh_token,
+        },
+    )
+}
+
+pub async fn require_auth(
+    State(state): State<AppState>,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    let headers = request
+        .headers()
+        .get(header::AUTHORIZATION)
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+
+    debug!("headers: {headers:?}");
+
+    let token_secrets = state.token_secrets.lock().await;
+    match jwt::verify_token(headers.to_str().unwrap(), &token_secrets) {
+        Ok(_) => Ok(next.run(request).await),
+        Err(_) => Err(StatusCode::UNAUTHORIZED),
+    }
 }

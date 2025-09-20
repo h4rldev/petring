@@ -4,13 +4,17 @@ use axum::{
     extract::Request,
     http::{Response, StatusCode},
     response::{Html, IntoResponse},
-    routing::get,
+    routing::{get, post},
 };
-use jess_museum::{
+use petring::{
     IoResult,
-    api::{get_api_index, get_member, get_server_info, get_uptime},
+    api::{
+        get_all_members, get_api_index, get_member, get_member_next, get_member_prev,
+        get_server_info, get_uptime,
+    },
     cli::init,
     config::{Level, string_to_ip},
+    state::AppState,
 };
 use std::{convert::Infallible, net::SocketAddr};
 use std::{
@@ -32,13 +36,11 @@ use tracing_subscriber::{
     fmt::{Subscriber, format::debug_fn},
 };
 
-mod jess_museum;
 use axum_server::tls_rustls::RustlsConfig;
 
-use crate::jess_museum::{
-    api::{get_all_members, get_member_next, get_member_prev},
-    state::AppState,
-};
+use crate::petring::api::{get_member_random, post_bot_setup, post_refresh_tokens};
+
+mod petring;
 
 static APP_START: once_cell::sync::Lazy<u64> = once_cell::sync::Lazy::new(|| {
     SystemTime::now()
@@ -112,11 +114,19 @@ async fn main() -> IoResult<()> {
     let user_routes = Router::new()
         .route("/{username}", get(get_member))
         .route("/{username}/next", get(get_member_next))
-        .route("/{username}/prev", get(get_member_prev));
+        .route("/{username}/prev", get(get_member_prev))
+        .route("/{username}/random", get(get_member_random));
+
+    // TODO: add protected routes
+
+    let bot_routes = Router::new()
+        .route("/setup", post(post_bot_setup))
+        .route("/refresh", post(post_refresh_tokens));
 
     let api_routes = Router::new()
         .route("/", get(get_api_index))
         .route("/server-info", get(get_server_info))
+        .route("/all-members", get(get_all_members))
         .route("/uptime", get(get_uptime))
         .route("/members", get(get_all_members));
 
@@ -137,6 +147,7 @@ async fn main() -> IoResult<()> {
         .fallback_service(serve_public)
         .nest("/api", api_routes)
         .nest("/user", user_routes)
+        .nest("/bot", bot_routes)
         .with_state(state);
     //
     // This adds compression and decompression to the request and response

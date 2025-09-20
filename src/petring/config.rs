@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, fs, path::PathBuf};
 use tracing::Level as TracingLevel;
 
-use super::{IoResult, WebringResult};
+use super::{IoResult, PetRingResult};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Level(pub TracingLevel);
@@ -81,8 +81,8 @@ impl From<String> for Level {
 }
 
 impl Config {
-    pub fn load() -> WebringResult<Self> {
-        let config = match fs::read_to_string("webring.toml") {
+    pub fn load() -> PetRingResult<Self> {
+        let config = match fs::read_to_string("petring.toml") {
             Ok(config) => config,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
@@ -99,7 +99,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn load_from_file(path: &PathBuf) -> WebringResult<Self> {
+    pub fn load_from_file(path: &PathBuf) -> PetRingResult<Self> {
         let config = match fs::read_to_string(path) {
             Ok(config) => config,
             Err(e) => {

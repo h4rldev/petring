@@ -101,6 +101,10 @@ impl TokenSecrets {
     pub fn refresh_secret(&self) -> &str {
         &self.refresh_secret
     }
+
+    pub fn blacklist_mut(&mut self) -> &mut TokenBlacklist {
+        &mut self.blacklist
+    }
 }
 
 pub fn generate_token(claims: Claims, secrets: &TokenSecrets) -> Result<String, TokenError> {
@@ -144,7 +148,10 @@ pub fn verify_token(token: &str, secrets: &TokenSecrets) -> Result<Claims, Token
     Ok(claims)
 }
 
-pub fn refresh_token(token: &str, secrets: &TokenSecrets) -> Result<(String, String), TokenError> {
+pub fn refresh_token(
+    token: &str,
+    secrets: &mut TokenSecrets,
+) -> Result<(String, String), TokenError> {
     if secrets.blacklist.contains_token(token) {
         return Err(TokenError::InvalidToken);
     }
@@ -168,16 +175,18 @@ pub fn refresh_token(token: &str, secrets: &TokenSecrets) -> Result<(String, Str
     }
 
     let access_token_claims = Claims::new(&refresh_claims.claims.sub, TokenType::Access);
-    let access_token = match generate_token(access_token_claims, &secrets) {
+    let access_token = match generate_token(access_token_claims, secrets) {
         Ok(token) => token,
         Err(_) => return Err(TokenError::FailedToRefresh),
     };
 
     let refresh_token_claims = Claims::new(&refresh_claims.claims.sub, TokenType::Refresh);
-    let refresh_token = match generate_token(refresh_token_claims, &secrets) {
+    let refresh_token = match generate_token(refresh_token_claims, secrets) {
         Ok(token) => token,
         Err(_) => return Err(TokenError::FailedToRefresh),
     };
+
+    secrets.blacklist.add_token(token);
 
     Ok((access_token, refresh_token))
 }
