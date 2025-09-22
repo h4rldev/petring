@@ -669,6 +669,42 @@ pub async fn get_user_by_discord_id(
     )
 }
 
+pub async fn get_user_by_discord_id_unverified(
+    State(state): State<AppState>,
+    Path(discord_id): Path<i64>,
+) -> impl IntoResponse {
+    let user_by_discord = match Users::find()
+        .filter(users::Column::DiscordId.eq(discord_id))
+        .one(&state.db)
+        .await
+    {
+        Ok(user) => user,
+        Err(_) => {
+            return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to fetch user");
+        }
+    };
+
+    let user_by_discord = match user_by_discord {
+        Some(user) => user,
+        None => {
+            return petring_api_err(StatusCode::NOT_FOUND, "User not found");
+        }
+    };
+
+    petring_api_response(
+        StatusCode::OK,
+        UserResponse {
+            username: user_by_discord.username.clone(),
+            url: user_by_discord.url.clone(),
+            discord_id: user_by_discord.discord_id,
+            verified: false,
+            created_at: user_by_discord.created_at,
+            edited_at: user_by_discord.edited_at,
+            verified_at: user_by_discord.verified_at,
+        },
+    )
+}
+
 #[derive(Serialize)]
 pub struct DeleteuserResponse {
     pub message: String,
@@ -700,7 +736,7 @@ pub async fn delete_user_by_username(
         Ok(_) => petring_api_response(
             StatusCode::OK,
             DeleteuserResponse {
-                message: "user deleted".to_string(),
+                message: format!("User {}({}) deleted", user.username, user.discord_id),
             },
         ),
         Err(_) => petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete user"),
@@ -733,7 +769,7 @@ pub async fn delete_user_by_discord_id(
         Ok(_) => petring_api_response(
             StatusCode::OK,
             DeleteuserResponse {
-                message: "user deleted".to_string(),
+                message: format!("User {}({}) deleted", user.username, user.discord_id),
             },
         ),
         Err(_) => petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete user"),
@@ -1001,6 +1037,7 @@ pub async fn put_user_edit(
 
         match active_user.update(&state.db).await {
             Ok(_) => {
+                info!("Updated user: {username}");
                 return petring_api_response(
                     StatusCode::OK,
                     UserResponse {
@@ -1015,6 +1052,7 @@ pub async fn put_user_edit(
                 );
             }
             Err(_) => {
+                error!("Failed to update user: {username}");
                 return petring_api_err(StatusCode::INTERNAL_SERVER_ERROR, "Failed to update user");
             }
         }
@@ -1037,7 +1075,7 @@ pub async fn require_auth(
         ))?;
 
     let token = headers.to_str().unwrap().split_at(7).1;
-    info!("token: {token}");
+    //info!("token: {token}");
     let token_secrets = state.token_secrets.lock().await;
     match jwt::verify_token(token, &token_secrets) {
         Ok(_) => Ok(next.run(request).await),

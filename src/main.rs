@@ -14,8 +14,9 @@ use petring::{
     api::{
         bulk_delete_users, delete_user_by_discord_id, delete_user_by_username, get_all_users,
         get_api_index, get_random_user, get_server_info, get_uptime, get_user,
-        get_user_by_discord_id, get_user_next, get_user_prev, get_user_random, post_bot_setup,
-        post_refresh_tokens, post_user_submit, put_user_edit, put_user_verify, require_auth,
+        get_user_by_discord_id, get_user_by_discord_id_unverified, get_user_next, get_user_prev,
+        get_user_random, post_bot_setup, post_refresh_tokens, post_user_submit, put_user_edit,
+        put_user_verify, require_auth,
     },
     cli::init,
     config::{Level, string_to_ip},
@@ -131,6 +132,10 @@ async fn main() -> IoResult<()> {
         .route_with_tsr(
             "/api/get/user/by-discord/{discord_id}",
             get(get_user_by_discord_id),
+        )
+        .route_with_tsr(
+            "/api/get/user/by-discord/{discord_id}/unverified",
+            get(get_user_by_discord_id_unverified),
         )
         .route_with_tsr(
             "/api/delete/user/by-discord/{discord_id}",
