@@ -6,7 +6,7 @@ html {
 	--accent-2: #66232e;
 	--accent-3: #44131a;
 	color: white;
-	background: var(--secondary);
+	background: black;
 }
 
 .div-meow {
@@ -72,4 +72,12 @@ html {
 		display: inline-block;
 		transform: rotate(0deg);
 	}
+}
+
+a:link {
+	color: #4b4beb;
+}
+
+a:visited {
+	color: #67418a;
 }

@@ -1,3 +1,6 @@
+const test_json = {"users": [{"username": "h4rl","url": "https://h4rl.dev"},{"username": "doloro","url": "https://doloro.co.uk/"}]}
+
+// allows mouse listeners to all links so animations stop when someone hovers over a link
 function meow() {
 const wrapper = document.getElementById('spin-item-wrapper'); // Note the period (.)
 const allDivs = document.querySelectorAll('.spin-item-inner'); // Selects the spinning divs
@@ -24,7 +27,27 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function genDemoLinks() {
+	test_json.users.forEach(user => {
+		makeLink(user.username, user.url)
+	})
+	calculateRotations()
+	meow()
+}
 
+function genApiLinks() {
+	let baseUrl = window.location.href;
+	let url = new URL(baseUrl);
+	url.path = "/api/get/users"
+	console.log(url);
+
+	const request = new Request(url)
+	request.json().then((data) => {
+		data.users.forEach(user => {
+			makeLink(user.username, user.url)
+		})
+	})
+	calculateRotations()
+	meow()
 }
 
 
@@ -35,7 +58,7 @@ function makeLink(label, url) {
 	const newSpinItemInner = document.createElement("div")
 	newSpinItemInner.className = "spin-item-inner"
 	const hyperLink = document.createElement("a")
-	hyperLink.src = url
+	hyperLink.href = url
 	hyperLink.innerText = label
 
 	newSpinItemInner.appendChild(hyperLink)
@@ -56,7 +79,6 @@ const length = allDivs.length;
   wrapper.style.animation = 'none';
 
 allDivs.forEach((item, i) => {
-  // i starts from 0, so use i + 1 for 1-based index
   item.parentNode.style.setProperty('--amount-of-element', length);
   item.parentNode.style.setProperty('--nth-element', i + 1);
   item.firstElementChild.style.transform = `rotate(calc((360deg / ${length}) * ${i + 1} * -1))`;
@@ -64,10 +86,8 @@ allDivs.forEach((item, i) => {
 });
 	meow()
 
-  // Trigger a reflow (forces the browser to recognize the change)
-  void wrapper.offsetWidth;
+  void wrapper.offsetWidth; // broswer reflow (its for animations)
 
-  // Re-add the animation (replace with your animation name, duration, etc.)
   wrapper.style.animation = 'spin 40s linear infinite';
 	allDivs.forEach(item => {
 		item.style.animation = 'counter-spin 40s linear infinite'
@@ -75,5 +95,9 @@ allDivs.forEach((item, i) => {
 }
 
 function main() {
-	meow();
+	if (location.protocol == 'file:') {
+		genDemoLinks()
+	} else {
+		genApiLinks()
+	}
 }
