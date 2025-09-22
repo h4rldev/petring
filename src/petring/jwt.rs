@@ -3,6 +3,7 @@ use dotenvy::dotenv;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use tracing::info;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,9 +44,9 @@ impl TokenBlacklist {
         self.tokens.insert(token.to_string());
     }
 
-    pub fn remove_token(&mut self, token: &str) {
+    /*pub fn remove_token(&mut self, token: &str) {
         self.tokens.remove(token);
-    }
+    }*/
 
     pub fn contains_token(&self, token: &str) -> bool {
         self.tokens.contains(token)
@@ -127,10 +128,13 @@ pub fn generate_token(claims: Claims, secrets: &TokenSecrets) -> Result<String, 
 
 pub fn verify_token(token: &str, secrets: &TokenSecrets) -> Result<Claims, TokenError> {
     if secrets.blacklist.contains_token(token) {
+        info!("token is blacklisted: {token}");
         return Err(TokenError::InvalidToken);
     }
 
-    let validation = Validation::new(Algorithm::HS256);
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.set_audience(&["access"]);
+    validation.validate_exp = true;
 
     let claims = match jsonwebtoken::decode::<Claims>(
         token,
@@ -138,25 +142,38 @@ pub fn verify_token(token: &str, secrets: &TokenSecrets) -> Result<Claims, Token
         &validation,
     ) {
         Ok(claims) => claims.claims,
-        Err(_) => return Err(TokenError::InvalidToken),
+        Err(_) => {
+            info!("Failed to decode token: {token}");
+            return Err(TokenError::InvalidToken);
+        }
     };
 
     if Utc::now().timestamp() > claims.exp {
+        info!("token has expired: {token}");
         return Err(TokenError::ExpiredToken);
     }
 
     Ok(claims)
 }
 
+pub struct RefreshResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub access_token_expires_in: i64,
+    pub refresh_token_expires_in: i64,
+}
+
 pub fn refresh_token(
     token: &str,
     secrets: &mut TokenSecrets,
-) -> Result<(String, String), TokenError> {
+) -> Result<RefreshResponse, TokenError> {
     if secrets.blacklist.contains_token(token) {
+        info!("token is blacklisted: {token}");
         return Err(TokenError::InvalidToken);
     }
 
     let mut validation = Validation::new(Algorithm::HS256);
+    validation.set_audience(&["refresh"]);
     validation.validate_exp = true;
 
     let refresh_claims = match jsonwebtoken::decode::<Claims>(
@@ -175,18 +192,23 @@ pub fn refresh_token(
     }
 
     let access_token_claims = Claims::new(&refresh_claims.claims.sub, TokenType::Access);
-    let access_token = match generate_token(access_token_claims, secrets) {
+    let access_token = match generate_token(access_token_claims.clone(), secrets) {
         Ok(token) => token,
         Err(_) => return Err(TokenError::FailedToRefresh),
     };
 
     let refresh_token_claims = Claims::new(&refresh_claims.claims.sub, TokenType::Refresh);
-    let refresh_token = match generate_token(refresh_token_claims, secrets) {
+    let refresh_token = match generate_token(refresh_token_claims.clone(), secrets) {
         Ok(token) => token,
         Err(_) => return Err(TokenError::FailedToRefresh),
     };
 
     secrets.blacklist.add_token(token);
 
-    Ok((access_token, refresh_token))
+    Ok(RefreshResponse {
+        access_token,
+        refresh_token,
+        access_token_expires_in: access_token_claims.exp,
+        refresh_token_expires_in: refresh_token_claims.exp,
+    })
 }

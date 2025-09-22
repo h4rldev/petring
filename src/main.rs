@@ -4,15 +4,18 @@ use axum::{
     body::Body,
     extract::Request,
     http::{Response, StatusCode},
+    middleware::from_fn_with_state,
     response::{Html, IntoResponse, Response as AxumResponse},
-    routing::{get, post},
+    routing::{delete, get, post, put},
 };
 use axum_extra::routing::RouterExt;
 use petring::{
     IoResult,
     api::{
-        get_all_members, get_api_index, get_member, get_member_next, get_member_prev,
-        get_server_info, get_uptime,
+        bulk_delete_users, delete_user_by_discord_id, delete_user_by_username, get_all_users,
+        get_api_index, get_random_user, get_server_info, get_uptime, get_user,
+        get_user_by_discord_id, get_user_next, get_user_prev, get_user_random, post_bot_setup,
+        post_refresh_tokens, post_user_submit, put_user_edit, put_user_verify, require_auth,
     },
     cli::init,
     config::{Level, string_to_ip},
@@ -42,8 +45,6 @@ use tracing_subscriber::{
 };
 
 use axum_server::tls_rustls::RustlsConfig;
-
-use crate::petring::api::{get_member_random, post_bot_setup, post_refresh_tokens};
 
 mod petring;
 
@@ -121,12 +122,32 @@ async fn main() -> IoResult<()> {
     let serve_public = ServeDir::new(root).not_found_service(service_fn(render_404));
 
     let user_routes = Router::new()
-        .route_with_tsr("/user/{username}", get(get_member))
-        .route_with_tsr("/user/{username}/next", get(get_member_next))
-        .route_with_tsr("/user/{username}/prev", get(get_member_prev))
-        .route_with_tsr("/user/{username}/random", get(get_member_random));
+        .route_with_tsr("/user/{username}", get(get_user))
+        .route_with_tsr("/user/{username}/next", get(get_user_next))
+        .route_with_tsr("/user/{username}/prev", get(get_user_prev))
+        .route_with_tsr("/user/{username}/random", get(get_user_random));
 
-    // TODO: add protected routes
+    let protected_routes = Router::new()
+        .route_with_tsr(
+            "/api/get/user/by-discord/{discord_id}",
+            get(get_user_by_discord_id),
+        )
+        .route_with_tsr(
+            "/api/delete/user/by-discord/{discord_id}",
+            delete(delete_user_by_discord_id),
+        )
+        .route_with_tsr(
+            "/api/delete/user/{username}",
+            delete(delete_user_by_username),
+        )
+        .route_with_tsr("/api/delete/users", delete(bulk_delete_users))
+        .route_with_tsr("/api/put/user/edit", put(put_user_edit))
+        .route_with_tsr(
+            "/api/put/user/verify/{discord_user_id}",
+            put(put_user_verify),
+        )
+        .route_with_tsr("/api/post/user/submit", post(post_user_submit))
+        .route_layer(from_fn_with_state(state.clone(), require_auth));
 
     let bot_routes = Router::new()
         .route_with_tsr("/bot/setup", post(post_bot_setup))
@@ -134,14 +155,15 @@ async fn main() -> IoResult<()> {
 
     let api_routes = Router::new()
         .route_with_tsr("/api", get(get_api_index))
-        .route_with_tsr("/api/server-info", get(get_server_info))
-        .route_with_tsr("/api/all-members", get(get_all_members))
-        .route_with_tsr("/api/uptime", get(get_uptime))
-        .route_with_tsr("/api/members", get(get_all_members));
+        .route_with_tsr("/api/get/server-info", get(get_server_info))
+        .route_with_tsr("/api/get/uptime", get(get_uptime))
+        .route_with_tsr("/api/get/users", get(get_all_users))
+        .route_with_tsr("/api/get/users/random", get(get_random_user));
 
     let app = Router::new()
         .fallback_service(serve_public)
         .merge(api_routes)
+        .merge(protected_routes)
         .merge(user_routes)
         .merge(bot_routes)
         .layer(
