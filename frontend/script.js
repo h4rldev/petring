@@ -1,4 +1,7 @@
+
+// this is just for local testing.. if it detects that the protocol is "file:/" itll just use this instead of fetching from backend
 const test_json = {"users": [{"username": "h4rl","url": "https://h4rl.dev"},{"username": "doloro","url": "https://doloro.co.uk/"}]}
+
 
 // allows mouse listeners to all links so animations stop when someone hovers over a link
 function meow() {
@@ -32,6 +35,15 @@ function genDemoLinks() {
 	})
 	calculateRotations()
 	meow()
+}
+
+// TODO: function name 
+async function meowmeow() {
+	server_uptime_element = document.getElementById("server-uptime");
+	const server_info = await fetch("/api/get/server-info");
+	server_info.json().then((data) => {
+		server_uptime_element.innerHTML = "Server Uptime: " + toString(data.server_uptime)
+	})
 }
 
 async function genApiLinks() {
@@ -95,5 +107,6 @@ function main() {
 		genDemoLinks()
 	} else {
 		genApiLinks()
+		meowmeow()
 	}
 }

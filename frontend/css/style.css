@@ -13,6 +13,9 @@ html {
 	display: flex;
   flex-direction: row;
   justify-content: space-between;
+	@media (orientation: portrait) {
+		flex-direction: column-reverse;
+	}
 	align-items: center;
 }
 
@@ -35,6 +38,10 @@ html {
     to {
         transform: rotate(-360deg)
     }
+}
+
+.window {
+	margin-bottom: 5px;
 }
 
 .spin-parent {
