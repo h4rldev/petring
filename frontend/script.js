@@ -16,7 +16,7 @@ allDivs.forEach(item => {
   item.addEventListener('mouseleave', () => {
     wrapper.getAnimations().forEach(y => {y.play()})
     allDivs.forEach(div => {
-    	div.getAnimations().forEach(y => {y.play()})    
+    	div.getAnimations().forEach(y => {y.play()})   
 		});
   });
 });
@@ -34,13 +34,9 @@ function genDemoLinks() {
 	meow()
 }
 
-function genApiLinks() {
-	let baseUrl = window.location.href;
-	let url = new URL(baseUrl);
-	url.path = "/api/get/users"
-	console.log(url);
-
-	const request = new Request(url)
+async function genApiLinks() {
+	const response = await fetch("/api/get/users");
+	// error handling ?.. whats that? (tbh if the backend isnt up the frontend wouldnt be served so like :P)
 	request.json().then((data) => {
 		data.users.forEach(user => {
 			makeLink(user.username, user.url)

@@ -11,42 +11,24 @@ html {
 
 .div-meow {
 	display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: space-between;
 	align-items: center;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.side-bar {
+	display: flex;
+	width: 300px;
+	flex-direction: column;
+	align-items: flex-start;
 }
 
-@keyframes counter-spin {
-    0% {
-        transform: rotate(0)
-    }
+.side-bar-content-wrap {
 
-    to {
-        transform: rotate(-360deg)
-    }
 }
 
-.spin-parent {
-  position: relative;
-  margin: auto;
-  max-width: 21.5rem;
-  min-height: 21.5rem;
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.spin-center {
-  position: absolute;
-  z-index: 2;
-}
-
-.spin-items-wrapper {
+.side-bar-content-inner {
+	background-color: reditems-wrapper {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -71,6 +53,9 @@ html {
 	a {
 		display: inline-block;
 		transform: rotate(0deg);
+	}
+	a:hover {
+		font-size: 24px;
 	}
 }
 
