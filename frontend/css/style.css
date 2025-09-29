@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'TopazPlus';
+  src: url('../assets/TopazPlus_a1200_v1.0.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 html {
 	--primary: rgba(94, 33, 94, 1);
   --secondary: rgba(41, 41, 41, 1);
@@ -13,14 +20,15 @@ html {
   flex-direction: column;
   justify-content: space-between;
 	align-items: center;
-	margin-top: 10px;
+	margin-top: 20px;
+	min-height: 100vh;
 }
 
 /* rewrite */
 
 .header-meow {
 	background: #9b2a97;
-	background: linear-gradient(0deg,var(--primary) 0%, var(--secondary) 100%);
+	background: radial-gradient(at bottom,var(--primary) 0%, var(--secondary) 100%);
 	height: 75px;
 
 	border: 1px solid var(--primary);
@@ -42,17 +50,46 @@ html {
 
 }
 
+.content-block {
+	background: #9b2a97;
+	background: var(--secondary);
+	outline-offset: 0px;
+	/* border-radius: 5px; */
+
+	width: 100%;
+	height: 400px;
+}
+
+.content-fade-in {
+	background: linear-gradient(180deg, rgba(0,0,0,255) 0%, var(--secondary) 100%);
+	height: 250px;
+	width: 100%;
+}
+
+.spin-content {
+	display: flex;
+	height: 75vh;
+	align-items: center;
+}
+
+.sepre {
+	margin-top: 250px;
+}
+
 .logo {
 	margin-left: 5px;
 	margin-right: 5px;
-}
-
-.content-wrapper {
-	background: #9b2a97;
-	background: linear-gradient(180deg,var(--primary) 0%, var(--secondary) 100%);
-	border: 1px solid var(--primary);
-	outline-offset: 0px;
-	border-radius: 5px;
+	justify-content: center;
+	align-items: center;
+	img {
+		width: auto;
+		height: 45px;
+	}
+	a {
+		font-family: TopazPlus;
+		font-size: 30px;
+	}
+	display: inline-block;
 }
 
 /* */
@@ -88,11 +125,17 @@ html {
   /* max-width: 21.5rem; */
   /* min-height: 21.5rem; */
   margin-bottom: 1rem;
+  margin-top: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
 	width: 500px;
 	height: 450px;
+	background: #9b2a97;
+	background: linear-gradient(180deg,var(--primary) 0%, var(--secondary) 100%);
+	border: 1px solid var(--primary);
+	outline-offset: 0px;
+	border-radius: 5px;
 }
 
 .spin-center {
