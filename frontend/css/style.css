@@ -1,7 +1,6 @@
 html {
-	--primary: #0d2222;
-  --secondary: #054f3f;
-  --thirdly: #043b2f;
+	--primary: rgba(94, 33, 94, 1);
+  --secondary: rgba(41, 41, 41, 1);
 	--accent-1: #9f8083;
 	--accent-2: #66232e;
 	--accent-3: #44131a;
@@ -11,13 +10,52 @@ html {
 
 .div-meow {
 	display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
-	@media (orientation: portrait) {
-		flex-direction: column-reverse;
-	}
 	align-items: center;
+	margin-top: 10px;
 }
+
+/* rewrite */
+
+.header-meow {
+	background: #9b2a97;
+	background: linear-gradient(0deg,var(--primary) 0%, var(--secondary) 100%);
+	height: 75px;
+
+	border: 1px solid var(--primary);
+	outline-offset: 0px;
+}
+
+.header-inner {
+	display: flex;
+	gap: 20px;
+	height: 100%;
+	/* justify-content: center; */
+  align-items: center;
+
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.header-element {
+
+}
+
+.logo {
+	margin-left: 5px;
+	margin-right: 5px;
+}
+
+.content-wrapper {
+	background: #9b2a97;
+	background: linear-gradient(180deg,var(--primary) 0%, var(--secondary) 100%);
+	border: 1px solid var(--primary);
+	outline-offset: 0px;
+	border-radius: 5px;
+}
+
+/* */
 
 .side-bar {
 	display: flex;
@@ -53,7 +91,7 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-	width: 450px;
+	width: 500px;
 	height: 450px;
 }
 
@@ -87,6 +125,7 @@ html {
   position: absolute;
   left: 50%;
   height: 50%;
+	text-align: left;
   transform-origin: center bottom;
   transform: translate(-50%) rotate(calc((360deg / var(--amount-of-element, 1)) * var(--nth-element, 1)));
 }
@@ -101,6 +140,7 @@ html {
 	a {
 		display: inline-block;
 		transform: rotate(0deg);
+		transition: 0.3s;
 	}
 	a:hover {
 		font-size: 24px;

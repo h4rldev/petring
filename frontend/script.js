@@ -80,18 +80,15 @@ function makeLink(label, url) {
 // calculates and applys rotations for all spin-items
 function calculateRotations() {	
 	const allDivs = document.querySelectorAll('.spin-item-inner'); // Selects the spinning divs
-const wrapper = document.getElementById('spin-item-wrapper'); // Note the period (.)
-const length = allDivs.length;
+	const wrapper = document.getElementById('spin-item-wrapper'); // Note the period (.)
+	const length = allDivs.length;
 
-	  // Remove the animation
-  wrapper.style.animation = 'none';
-
-allDivs.forEach((item, i) => {
-  item.parentNode.style.setProperty('--amount-of-element', length);
-  item.parentNode.style.setProperty('--nth-element', i + 1);
-  item.firstElementChild.style.transform = `rotate(calc((360deg / ${length}) * ${i + 1} * -1))`;
-	item.style.animation = 'none';
-});
+	allDivs.forEach((item, i) => {
+		item.parentNode.style.setProperty('--amount-of-element', length);
+		item.parentNode.style.setProperty('--nth-element', i + 1);
+		item.firstElementChild.style.transform = `rotate(calc((360deg / ${length}) * ${i + 1} * -1))`;
+		item.style.animation = 'none';
+	});
 	meow()
 
   void wrapper.offsetWidth; // broswer reflow (its for animations)
