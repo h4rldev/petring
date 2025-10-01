@@ -9,20 +9,21 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Users::Table)
+                    .table(Ads::Table)
                     .if_not_exists()
-                    .col(pk_auto(Users::Id))
-                    .col(string_uniq(Users::Username).not_null())
-                    .col(integer_uniq(Users::DiscordId).not_null())
-                    .col(string_uniq(Users::Url).not_null())
-                    .col(boolean(Users::Verified).not_null().default(false))
+                    .col(pk_auto(Ads::Id))
+                    .col(string_uniq(Ads::Username).not_null())
+                    .col(integer_uniq(Ads::DiscordId).not_null())
+                    .col(string_uniq(Ads::ImageUrl).not_null())
+                    .col(string_uniq(Ads::AdUrl).not_null())
+                    .col(boolean(Ads::Verified).not_null().default(false))
                     .col(
-                        string(Users::CreatedAt)
+                        string(Ads::CreatedAt)
                             .not_null()
                             .default(Utc::now().to_rfc3339()),
                     )
-                    .col(string(Users::EditedAt).not_null().default(""))
-                    .col(string(Users::VerifiedAt).not_null().default(""))
+                    .col(string(Ads::EditedAt).not_null().default(""))
+                    .col(string(Ads::VerifiedAt).not_null().default(""))
                     .to_owned(),
             )
             .await?;
@@ -30,9 +31,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_username_idx")
-                    .table(Users::Table)
-                    .col(Users::Username)
+                    .name("ads_username_idx")
+                    .table(Ads::Table)
+                    .col(Ads::Username)
                     .unique()
                     .to_owned(),
             )
@@ -41,9 +42,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_url_idx")
-                    .table(Users::Table)
-                    .col(Users::Url)
+                    .name("ads_url_idx")
+                    .table(Ads::Table)
+                    .col(Ads::ImageUrl)
                     .unique()
                     .to_owned(),
             )
@@ -52,9 +53,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_discord_id_idx")
-                    .table(Users::Table)
-                    .col(Users::DiscordId)
+                    .name("ads_discord_id_idx")
+                    .table(Ads::Table)
+                    .col(Ads::DiscordId)
                     .unique()
                     .to_owned(),
             )
@@ -63,9 +64,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_created_at_idx")
-                    .table(Users::Table)
-                    .col(Users::CreatedAt)
+                    .name("ads_created_at_idx")
+                    .table(Ads::Table)
+                    .col(Ads::CreatedAt)
                     .to_owned(),
             )
             .await?;
@@ -73,9 +74,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_edited_at_idx")
-                    .table(Users::Table)
-                    .col(Users::EditedAt)
+                    .name("ads_edited_at_idx")
+                    .table(Ads::Table)
+                    .col(Ads::EditedAt)
                     .to_owned(),
             )
             .await?;
@@ -83,9 +84,9 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 Index::create()
-                    .name("users_verified_at_idx")
-                    .table(Users::Table)
-                    .col(Users::VerifiedAt)
+                    .name("ads_verified_at_idx")
+                    .table(Ads::Table)
+                    .col(Ads::VerifiedAt)
                     .to_owned(),
             )
             .await?;
@@ -97,8 +98,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_username_idx")
-                    .table(Users::Table)
+                    .name("ads_username_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
@@ -106,8 +107,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_url_idx")
-                    .table(Users::Table)
+                    .name("ads_url_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
@@ -115,8 +116,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_discord_id_idx")
-                    .table(Users::Table)
+                    .name("ads_discord_id_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
@@ -124,8 +125,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_created_at_idx")
-                    .table(Users::Table)
+                    .name("ads_created_at_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
@@ -133,8 +134,8 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_edited_at_idx")
-                    .table(Users::Table)
+                    .name("ads_edited_at_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
@@ -142,14 +143,14 @@ impl MigrationTrait for Migration {
         manager
             .drop_index(
                 Index::drop()
-                    .name("users_verified_at_idx")
-                    .table(Users::Table)
+                    .name("ads_verified_at_idx")
+                    .table(Ads::Table)
                     .to_owned(),
             )
             .await?;
 
         manager
-            .drop_table(Table::drop().table(Users::Table).to_owned())
+            .drop_table(Table::drop().table(Ads::Table).to_owned())
             .await?;
 
         Ok(())
@@ -157,12 +158,13 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(DeriveIden)]
-enum Users {
+enum Ads {
     Table,
     Id,
     Username,
     DiscordId,
-    Url,
+    ImageUrl,
+    AdUrl,
     Verified,
     CreatedAt,
     EditedAt,

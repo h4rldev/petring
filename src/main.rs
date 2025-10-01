@@ -1,48 +1,51 @@
 use askama::Template;
 use axum::{
-    Router,
     body::Body,
     extract::Request,
-    http::{Response, StatusCode},
+    http::{
+        header::{self, CACHE_CONTROL, CONTENT_SECURITY_POLICY},
+        HeaderValue, Method, Response, StatusCode,
+    },
     middleware::from_fn_with_state,
     response::{Html, IntoResponse, Response as AxumResponse},
     routing::{delete, get, post, put},
+    Router,
 };
 use axum_extra::routing::RouterExt;
 use petring::{
-    IoResult,
     api::{
-        bulk_delete_users, delete_user_by_discord_id, delete_user_by_username, get_all_users,
-        get_api_index, get_random_user, get_server_info, get_uptime, get_user,
-        get_user_by_discord_id, get_user_by_discord_id_unverified, get_user_next, get_user_prev,
-        get_user_random, post_bot_setup, post_refresh_tokens, post_user_submit, put_user_edit,
-        put_user_verify, require_auth,
+        protected::{self, petads, petring as petring_protected},
+        public,
     },
     cli::init,
-    config::{Level, string_to_ip},
+    config::{string_to_ip, Level},
     state::AppState,
+    IoResult,
 };
-use std::{convert::Infallible, net::SocketAddr};
 use std::{
+    convert::Infallible,
+    net::SocketAddr,
     path::PathBuf,
-    time::{SystemTime, UNIX_EPOCH},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tower::{ServiceBuilder, service_fn};
+use tower::{service_fn, ServiceBuilder};
 use tower_http::{
-    CompressionLevel,
     compression::{
-        CompressionLayer, Predicate,
         predicate::{NotForContentType, SizeAbove},
+        CompressionLayer, Predicate,
     },
+    cors::{AllowOrigin, CorsLayer},
     decompression::RequestDecompressionLayer,
     services::ServeDir,
+    set_header::SetResponseHeaderLayer,
     trace::{DefaultMakeSpan, TraceLayer},
+    CompressionLevel,
 };
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 use tracing_subscriber::{
     field::MakeExt,
-    fmt::{Subscriber, format::debug_fn},
+    fmt::{format::debug_fn, Subscriber},
 };
 
 use axum_server::tls_rustls::RustlsConfig;
@@ -62,7 +65,7 @@ struct NotFoundTemplate {
     path: String,
 }
 
-struct HtmlTemplate<T>(T);
+pub struct HtmlTemplate<T>(T);
 
 impl<T> IntoResponse for HtmlTemplate<T>
 where
@@ -117,56 +120,109 @@ async fn main() -> IoResult<()> {
     debug!("root: {root:?}");
 
     let state = AppState::new().await;
-
     let compression_predicate = SizeAbove::new(256).and(NotForContentType::IMAGES);
+    let cors_public = if cfg!(debug_assertions) {
+        CorsLayer::new()
+            .allow_origin(AllowOrigin::any())
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+            .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
+            .max_age(Duration::from_secs(60 * 60 * 24 * 7))
+    } else {
+        CorsLayer::new()
+            .allow_origin(AllowOrigin::any())
+            .allow_methods([Method::GET])
+            .allow_headers([header::ACCEPT, header::CONTENT_TYPE])
+            .max_age(Duration::from_secs(60 * 60 * 24))
+    };
+
+    let cors_protected = CorsLayer::new()
+        .allow_origin(AllowOrigin::any())
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
+        .max_age(Duration::from_secs(60 * 60 * 24 * 7));
 
     let serve_public = ServeDir::new(root).not_found_service(service_fn(render_404));
 
     let user_routes = Router::new()
-        .route_with_tsr("/user/{username}", get(get_user))
-        .route_with_tsr("/user/{username}/next", get(get_user_next))
-        .route_with_tsr("/user/{username}/prev", get(get_user_prev))
-        .route_with_tsr("/user/{username}/random", get(get_user_random));
+        .route_with_tsr("/user/{username}", get(public::get_user))
+        .route_with_tsr("/user/{username}/next", get(public::get_user_next))
+        .route_with_tsr("/user/{username}/prev", get(public::get_user_prev))
+        .route_with_tsr("/user/{username}/random", get(public::get_user_random))
+        .layer(cors_public.clone());
 
     let protected_routes = Router::new()
         .route_with_tsr(
             "/api/get/user/by-discord/{discord_id}",
-            get(get_user_by_discord_id),
+            get(petring_protected::get_user_by_discord_id),
         )
         .route_with_tsr(
             "/api/get/user/by-discord/{discord_id}/unverified",
-            get(get_user_by_discord_id_unverified),
+            get(petring_protected::get_user_by_discord_id_unverified),
         )
         .route_with_tsr(
             "/api/delete/user/by-discord/{discord_id}",
-            delete(delete_user_by_discord_id),
+            delete(petring_protected::delete_user_by_discord_id),
         )
         .route_with_tsr(
             "/api/delete/user/{username}",
-            delete(delete_user_by_username),
+            delete(petring_protected::delete_user_by_username),
         )
-        .route_with_tsr("/api/delete/users", delete(bulk_delete_users))
-        .route_with_tsr("/api/put/user/edit", put(put_user_edit))
+        .route_with_tsr(
+            "/api/delete/users",
+            delete(petring_protected::bulk_delete_users),
+        )
+        .route_with_tsr("/api/put/user/edit", put(petring_protected::put_user_edit))
         .route_with_tsr(
             "/api/put/user/verify/{discord_user_id}",
-            put(put_user_verify),
+            put(petring_protected::put_user_verify),
         )
-        .route_with_tsr("/api/post/user/submit", post(post_user_submit))
-        .route_layer(from_fn_with_state(state.clone(), require_auth));
+        .route_with_tsr(
+            "/api/post/user/submit",
+            post(petring_protected::post_user_submit),
+        )
+        .route_with_tsr("/api/post/ad/submit", post(petads::post_ad_submit))
+        .route_with_tsr("/api/put/ad/verify", post(petads::put_ad_verify))
+        .route_with_tsr("/api/put/ad/edit", put(petads::put_ad_edit))
+        .route_with_tsr(
+            "/api/delete/ad/by-discord/{discord_id}",
+            delete(petads::delete_ad_by_discord_id),
+        )
+        .route_with_tsr(
+            "/api/delete/ad/{username}",
+            delete(petads::delete_ad_by_username),
+        )
+        .route_with_tsr("/api/delete/ads", delete(petads::bulk_delete_ads))
+        .route_layer(from_fn_with_state(state.clone(), protected::require_auth))
+        .layer(cors_protected.clone());
 
     let bot_routes = Router::new()
-        .route_with_tsr("/bot/setup", post(post_bot_setup))
-        .route_with_tsr("/bot/refresh", post(post_refresh_tokens));
+        .route_with_tsr("/bot/setup", post(protected::post_bot_setup))
+        .route_with_tsr("/bot/refresh", post(protected::post_refresh_tokens))
+        .layer(cors_protected);
 
     let api_routes = Router::new()
-        .route_with_tsr("/api", get(get_api_index))
-        .route_with_tsr("/api/get/server-info", get(get_server_info))
-        .route_with_tsr("/api/get/uptime", get(get_uptime))
-        .route_with_tsr("/api/get/users", get(get_all_users))
-        .route_with_tsr("/api/get/users/random", get(get_random_user));
+        .route_with_tsr("/api", get(public::get_public_api_index))
+        .route_with_tsr("/api/get/server-info", get(public::get_server_info))
+        .route_with_tsr("/api/get/uptime", get(public::get_uptime))
+        .route_with_tsr("/api/get/users", get(public::get_all_users))
+        .route_with_tsr("/api/get/users/random", get(public::get_random_user))
+        .route_with_tsr("/api/get/random-ad", get(public::get_random_ad))
+        .layer(cors_public.clone());
 
     let app = Router::new()
         .fallback_service(serve_public)
+        .layer(
+            ServiceBuilder::new()
+                .layer(SetResponseHeaderLayer::if_not_present(
+                    CACHE_CONTROL,
+                    HeaderValue::from_static("max-age=604800"),
+                ))
+                .layer(SetResponseHeaderLayer::if_not_present(
+                    CONTENT_SECURITY_POLICY,
+                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog;"),
+                ))
+                .layer(cors_public),
+        )
         .merge(api_routes)
         .merge(protected_routes)
         .merge(user_routes)
