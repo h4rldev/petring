@@ -1,6 +1,6 @@
 
 // this is just for local testing.. if it detects that the protocol is "file:/" itll just use this instead of fetching from backend
-const test_json = {"users": [{"username": "h4rl","url": "https://h4rl.dev"},{"username": "doloro","url": "https://doloro.co.uk/"}]}
+const test_json = {"users": [{"username": "h4rl","url": "https://h4rl.dev"},{"username": "doloro","url": "https://doloro.co.uk/"},{"username": "doloro","url": "https://doloro.co.uk/"},{"username": "doloro","url": "https://doloro.co.uk/"}]}
 
 
 // allows mouse listeners to all links so animations stop when someone hovers over a link
@@ -91,12 +91,12 @@ function calculateRotations() {
 	});
 	meow()
 
-  void wrapper.offsetWidth; // broswer reflow (its for animations)
 
   wrapper.style.animation = 'spin 40s linear infinite';
 	allDivs.forEach(item => {
 		item.style.animation = 'counter-spin 40s linear infinite'
 	})
+  void wrapper.offsetWidth; // broswer reflow (its for animations)
 }
 
 function main() {
