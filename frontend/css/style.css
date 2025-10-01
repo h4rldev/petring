@@ -9,8 +9,6 @@ html {
 	--primary: rgba(94, 33, 94, 1);
   --secondary: rgba(41, 41, 41, 1);
 	--accent-1: #9f8083;
-	--accent-2: #66232e;
-	--accent-3: #44131a;
 	color: white;
 	background: black;
 }
@@ -46,6 +44,41 @@ body {
 	@media (orientation: portrait) {
 		justify-content: center;
 	}
+}
+
+.credit-content {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+}
+
+.credit-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	padding: 5px;
+	background-color: rgba(77, 99, 71, 0.2);
+	width: 200px;
+	img {
+		width: 100%;
+		height: auto;
+		background-color: black;
+		border-radius: 5px;
+	}
+	p {
+		width: 100%;
+		margin: 0px;
+	}
+}
+	.github {
+		width: 100px;
+		height: auto;
+		background-color: rgba(77, 99, 71, 0.2);
+		border-radius: 5px;
+	}.
+.credit-item_title {
+	font-size: 32px;
 }
 
 .header-inner {
@@ -249,9 +282,15 @@ body {
 		display: inline-block;
 		transform: rotate(0deg);
 		transition: 0.3s;
+
+		background-color: var(--accent-1);
+		padding: 5px;
+		border-radius: 5px;
 	}
 	a:hover {
 		font-size: 24px;
+		padding: 3px;
+		border-radius: 3px;
 	}
 }
 
