@@ -4,4 +4,5 @@ node_modules
 dist
 target
 .env
-webring.db
+petring.db
+test.json

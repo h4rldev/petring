@@ -1,234 +1,345 @@
 @font-face {
-  font-family: 'TopazPlus';
-  src: url('../assets/TopazPlus_a1200_v1.0.ttf') format('truetype');
+  font-family: "TopazPlus";
+  src: url("../assets/TopazPlus_a1200_v1.0.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
 
 html {
-	--primary: rgba(94, 33, 94, 1);
+  --primary: rgba(94, 33, 94, 1);
   --secondary: rgba(41, 41, 41, 1);
-	--accent-1: #9f8083;
-	color: white;
-	background: black;
+  --accent-1: #f0f0f0;
+  color: white;
+  background: black;
 }
 
 body {
-	margin: 0px;
+  margin: 0px;
 }
 
 .div-meow {
-	display: flex;
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
-	align-items: center;
-	margin-top: 20px;
-	min-height: 100vh;
+  align-items: center;
+  margin-top: 20px;
+  min-height: 100vh;
 }
 
 /* rewrite */
 
 .header-meow {
-	display: flex;
-	background: #9b2a97;
-	background: radial-gradient(at bottom,var(--primary) 0%, var(--secondary) 100%);
-	min-height: 75px;
-  
+  display: flex;
+  background: radial-gradient(
+    at bottom,
+    var(--primary) 0%,
+    var(--secondary) 100%
+  );
+  min-height: 75px;
+
   align-items: center;
 
-	margin: 8px;
-	margin-bottom: 0px;
+  margin: 8px;
+  margin-bottom: 0px;
 
-	border: 1px solid var(--primary);
-	outline-offset: 0px;
-	@media (orientation: portrait) {
-		justify-content: center;
-	}
-}
+  border-radius: 15px;
 
-.credit-content {
-	display: flex;
-	flex-direction: row;
-	gap: 10px;
-}
-
-.credit-item {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 10px;
-	padding: 5px;
-	background-color: rgba(77, 99, 71, 0.2);
-	width: 200px;
-	img {
-		width: 100%;
-		height: auto;
-		background-color: black;
-		border-radius: 5px;
-	}
-	p {
-		width: 100%;
-		margin: 0px;
-	}
-}
-	.github {
-		width: 100px;
-		height: auto;
-		background-color: rgba(77, 99, 71, 0.2);
-		border-radius: 5px;
-	}.
-.credit-item_title {
-	font-size: 32px;
+  border: 3px solid var(--primary);
+  outline-offset: 0px;
+  @media (orientation: portrait) {
+    justify-content: center;
+  }
 }
 
 .header-inner {
-	display: flex;
-	gap: 20px;
-	height: 100%;
-	/* justify-content: center; */
+  display: flex;
+  flex-direction: row;
+  @media (orientation: portrait) {
+    flex-direction: column;
+  }
+}
+
+.credit-list {
+  display: flex;
+  padding-left: 0px;
+  flex-direction: row;
+  list-style: none;
+  list-style-position: inside;
+  gap: 10px;
+}
+
+.credit-item {
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+  align-items: center;
+  gap: 10px;
+  padding: 5px;
+  background-color: rgba(77, 99, 71, 0.2);
+  width: 200px;
+  img {
+    width: 100%;
+    height: auto;
+    background-color: black;
+    border-radius: 5px;
+  }
+  p {
+    width: 100%;
+    margin: 0px;
+  }
+}
+.github {
+  width: 100px;
+  height: auto;
+  background-color: rgba(77, 99, 71, 0.2);
+  border-radius: 5px;
+}
+. .credit-item_title {
+  font-size: 32px;
+}
+
+.header-element-list {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  height: 100%;
+  font-family: sans-serif;
+  /* justify-content: center; */
+  align-items: center;
+  padding-left: 0px;
+  flex-direction: row;
+  margin-left: 20px;
+  margin-right: 20px;
+  @media (orientation: portrait) {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+.nav-element {
+  a {
+    transition: text-decoration-color 0.2s ease-in-out;
+    transition: color 0.2s ease-in-out;
+    color: lightblue;
+    text-decoration: underline;
+    text-decoration-color: white;
+    text-underline-offset: 4px;
+  }
+
+  a:link {
+    color: lightblue;
+  }
+
+  a:visited {
+    color: lightblue;
+  }
+
+  a:visited {
+    color: lightblue;
+  }
+
+  a:hover {
+    text-decoration-color: lightblue;
+    color: white;
+  }
+}
+
+.info-block {
+  display: flex;
+  flex-direction: column;
   align-items: center;
 
-	margin-left: 20px;
-	margin-right: 20px;
-	@media (orientation: portrait) {
-		flex-direction: column;
-		gap: 10px;
-		margin-bottom: 10px;
-	}
+  background: #9b2a97;
+  background: var(--secondary);
+  outline-offset: 0px;
+  /* border-radius: 5px; */
+
+  width: 100%;
 }
 
-.header-element {
+.info-block-inner {
+  width: 95%;
+  h1 {
+    font-family: "TopazPlus";
+  }
+  hr {
+    background-image: linear-gradient(
+      90deg,
+      var(--primary) 30%,
+      var(--secondary) 100%
+    );
 
-}
-
-.content-block {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	background: #9b2a97;
-	background: var(--secondary);
-	outline-offset: 0px;
-	/* border-radius: 5px; */
-
-	width: 100%;
-}
-
-.content-block-inner {
-	width: 95%;
-	h1 {
-		font-family: 'TopazPlus';
-	}
-	hr {
-    background-image: linear-gradient(90deg, var(--primary) 30%, var(--secondary) 100%);
-    
     border: 0;
     height: 3px;
-	}
+  }
+}
+
+.direction-list {
+  list-style-position: inside;
+  list-style: "> ";
+  padding-left: 18px;
+  li {
+    margin-bottom: 8px;
+    font-size: 18px;
+    font-family: sans-serif;
+  }
+}
+
+.petad-desc {
+  font-size: 18px;
+  font-family: sans-serif;
+  line-height: 1.5;
+  @media (orientation: landscape) {
+    width: 80em;
+  }
 }
 
 .content-block-inner + .content-block-inner {
-	margin-top: 50px;
+  margin-top: 50px;
 }
 
 .content-fade-in {
-	background: linear-gradient(180deg, rgba(0,0,0,255) 0%, var(--secondary) 100%);
-	height: 250px;
-	width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 255) 0%,
+    var(--secondary) 100%
+  );
+  height: 250px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  a {
+    display: block;
+    background-color: black;
+    font-family: sans-serif;
+    color: white;
+    margin: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 50px;
+    padding-right: 50px;
+    text-decoration: none;
+    border-radius: 15px;
+  }
+
+  a:hover {
+    background-color: white;
+    color: black !important;
+  }
+
+  a:visited {
+    color: white;
+  }
+
+  a:active {
+    color: gray;
+  }
 }
 
 .spin-content {
-	display: flex;
-	height: 70vh;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	overflow: hidden;
-	@media (orientation: portrait) {
-  /* CSS rules for portrait mode */
-		height: 100%;
-	}
+  display: flex;
+  height: 70vh;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  @media (orientation: portrait) {
+    /* CSS rules for portrait mode */
+    height: 100%;
+  }
 }
 
 .header-element-wrapper {
-	display: flex;
-	flex-direction: row;
-	gap: 10px;
-	@media (orientation: portrait) {
-		flex-direction: row;
-	}
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  @media (orientation: portrait) {
+    flex-direction: row;
+  }
 }
 
 .sepre {
-	margin-top: 250px;
+  margin-top: 250px;
 }
 
 .logo {
-	margin-left: 5px;
-	margin-right: 5px;
-	justify-content: center;
-	align-items: center;
-	img {
-		width: auto;
-		height: 45px;
-	}
-	a {
-		font-family: TopazPlus;
-		font-size: 30px;
-	}
-	display: inline-block;
+  margin-left: 30px;
+  margin-right: 5px;
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  height: 49px;
+  justify-content: center;
+  align-items: center;
+  img {
+    width: auto;
+    display: inline-block;
+    height: 45px;
+  }
+  p {
+    display: block;
+    width: min-content;
+    font-family: TopazPlus;
+    font-size: 30px;
+    width: 100%;
+    line-height: 49px;
+  }
+  @media (orientation: portrait) {
+    width: 100%;
+    margin-left: 5px;
+  }
 }
 
 /* */
 
 .side-bar {
-	display: flex;
-	width: 300px;
-	flex-direction: column;
-	align-items: flex-start;
+  display: flex;
+  width: 300px;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes counter-spin {
-    0% {
-        transform: rotate(0)
-    }
+  0% {
+    transform: rotate(0);
+  }
 
-    to {
-        transform: rotate(-360deg)
-    }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 
 .window {
-	margin-bottom: 5px;
+  margin-bottom: 5px;
 }
 
 .spin-parent {
   position: relative;
   margin: auto;
-  /* max-width: 21.5rem; */
-  /* min-height: 21.5rem; */
   margin-bottom: 1rem;
   margin-top: 1rem;
   display: flex;
+  border-radius: 15px;
   justify-content: center;
   align-items: center;
-	aspect-ratio: 1 / 1;
-	
-	width: 500px;
-	height: 500px;
-	@media (orientation: portrait) {
-		width: 95vw;
-		height: unset;
-	}
-	background: #9b2a97;
-	background: linear-gradient(180deg,var(--primary) 0%, var(--secondary) 100%);
-	border: 1px solid var(--primary);
-	outline-offset: 0px;
-	border-radius: 5px;
+  aspect-ratio: 1 / 1;
+  min-height: 70vh;
+
+  @media (orientation: portrait) {
+    width: 95vw;
+    height: unset;
+  }
+  background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+  border: 1px solid var(--primary);
+  outline-offset: 0px;
 }
 
 .spin-center {
@@ -244,15 +355,14 @@ body {
 }
 
 .spin-items-wrapper::-webkit-scrollbar {
-	display: none;
+  display: none;
 }
 
 .side-bar-content-wrap {
-
 }
 
 .side-bar-content-inner {
-	background-color: red;
+  background-color: red;
 }
 
 .items-wrapper {
@@ -266,38 +376,45 @@ body {
   position: absolute;
   left: 50%;
   height: 50%;
-	text-align: left;
+  text-align: left;
   transform-origin: center bottom;
-  transform: translate(-50%) rotate(calc((360deg / var(--amount-of-element, 1)) * var(--nth-element, 1)));
+  transform: translate(-50%)
+    rotate(calc((360deg / var(--amount-of-element, 1)) * var(--nth-element, 1)));
 }
 
 .spin-item > div {
-  --base-rotation: calc((360deg / var(--amount-of-element, 1)) * var(--nth-element, 1));
+  --base-rotation: calc(
+    (360deg / var(--amount-of-element, 1)) * var(--nth-element, 1)
+  );
   transform: rotate(0);
   animation: counter-spin 40s linear infinite;
 }
 
 .spin-item-inner {
-	a {
-		display: inline-block;
-		transform: rotate(0deg);
-		transition: 0.3s;
+  a {
+    display: inline-block;
+    transform: rotate(0deg);
+    transition: 0.3s;
+    text-align: center;
 
-		background-color: var(--accent-1);
-		padding: 5px;
-		border-radius: 5px;
-	}
-	a:hover {
-		font-size: 24px;
-		padding: 3px;
-		border-radius: 3px;
-	}
+    background-color: var(--accent-1);
+    min-width: 50px;
+    padding: 5px;
+    border-radius: 15px;
+  }
+  a:hover {
+    tex-align: center;
+    font-size: 24px;
+    padding: 10px;
+    min-width: 100px;
+    border-radius: 30px;
+  }
 }
 
 a:link {
-	color: #4b4beb;
+  color: #4b4beb;
 }
 
 a:visited {
-	color: #67418a;
+  color: #67418a;
 }
