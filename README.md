@@ -1,6 +1,6 @@
-# jess museum webring
+# PetRing & PetAds
 
-This is a webring for the jess museum discord server :3
+This is a webring and navlink ad system for the Jess Museum Discord server.
 
 ## How to build
 
@@ -8,6 +8,7 @@ This is a webring for the jess museum discord server :3
 
 - Just
 - rust, cargo and stuffs
+- sqlite
 
 ```
 just build

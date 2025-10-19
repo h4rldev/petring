@@ -1,9 +1,16 @@
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, DatabaseConnection};
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+use crate::petring::jwt::TokenSecrets;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: DatabaseConnection,
+    pub has_generated_jwt: Arc<Mutex<bool>>,
+    pub bot_token: String,
+    pub token_secrets: Arc<Mutex<TokenSecrets>>,
 }
 
 /* State for the admin endpoints */
@@ -11,6 +18,8 @@ pub struct AppState {
 impl AppState {
     pub async fn new() -> Self {
         dotenv().ok();
+
+        let bot_token = std::env::var("BOT_TOKEN").expect("BOT_TOKEN must be set");
 
         let mut connection_opts =
             ConnectOptions::new(std::env::var("DATABASE_URL").expect("DATABASE_URL must be set"));
@@ -27,6 +36,13 @@ impl AppState {
             .await
             .expect("Failed to connect to database");
 
-        Self { db }
+        let token_secrets = TokenSecrets::new();
+
+        Self {
+            db,
+            has_generated_jwt: Arc::new(Mutex::new(false)),
+            bot_token,
+            token_secrets: Arc::new(Mutex::new(token_secrets)),
+        }
     }
 }
