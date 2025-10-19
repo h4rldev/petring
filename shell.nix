@@ -7,7 +7,11 @@ with pkgs;
       rustup
       pkg-config
       sqlite
-      prettierd
       openssl
+
+      # linters and formatters
+      markdownlint-cli
+      prettierd
+      alejandra
     ];
   }
