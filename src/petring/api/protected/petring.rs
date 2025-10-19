@@ -1,21 +1,21 @@
 use super::{
+    BulkUserDeleteRequest, BulkUserDeleteResponse, EditUserResponse, UserEdit, UserResponse,
+    UserSubmission,
     database::{
         entities::{UserModel, Users},
         users,
     },
     petring_api_err, petring_api_response,
     state::AppState,
-    BulkUserDeleteRequest, BulkUserDeleteResponse, EditUserResponse, UserEdit, UserResponse,
-    UserSubmission,
 };
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use chrono::Utc;
-use sea_orm::{prelude::Expr, ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set, prelude::Expr};
 #[allow(unused_imports)]
 use tracing::{debug, error, info};
 
