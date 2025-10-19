@@ -7,5 +7,6 @@ with pkgs;
       rustup
       pkg-config
       sqlite
+      prettierd
     ];
   }
