@@ -1,6 +1,6 @@
 "use strict";
 
-function throw_dice() {
+function flipCoin() {
   let random = Math.floor(Math.random() * (1000 - 1 + 1) + 1);
 
   if (random > 500) {
@@ -15,7 +15,6 @@ async function getRandomAd() {
   const image_link_element = document.getElementById("image-link");
   const promo_link_element = document.getElementById("promo-link");
   let response;
-
 
   try {
     response = await fetch("/api/get/random-ad");
@@ -37,13 +36,12 @@ async function getRandomAd() {
     } else {
       promo_link_element.href = `${window.location.protocol}//${window.location.hostname}/petads`;
     }
-
   } catch (error) {
-    console.error('Error fetching ad:', error);
+    console.error("Error fetching ad:", error);
 
-    image_element.src = throw_dice() ?
-      `https://http.dog/${error.cause.status}.jpg` :
-      `https://http.cat/${error.cause.status}`;
+    image_element.src = flipCoin()
+      ? `https://http.dog/${error.cause.status}.jpg`
+      : `https://http.cat/${error.cause.status}`;
     image_element.alt = error.cause.message;
     document.title = error.cause.message;
   }
