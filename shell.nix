@@ -7,6 +7,6 @@ with pkgs;
       rustup
       pkg-config
       sqlite
-      openssl
+      prettierd
     ];
   }
