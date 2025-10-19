@@ -8,5 +8,6 @@ with pkgs;
       pkg-config
       sqlite
       prettierd
+      openssl
     ];
   }
