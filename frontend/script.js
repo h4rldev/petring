@@ -53,17 +53,17 @@ function genDemoLinks() {
 // TODO: function name
 async function meowmeow() {
   server_uptime_element = document.getElementById("server-uptime");
-  const server_info = await fetch("/api/get/server-info");
-  server_info.json().then((data) => {
-    server_uptime_element.innerHTML =
-      "Server Uptime: " + toString(data.server_uptime);
-  });
+  const server_info = await fetch("/api/get/uptime");
+
+  let data = await server_info.json();
+
+  server_uptime_element.innerText = `App uptime: ${data.app_uptime}, System uptime: ${data.system_uptime}`;
 }
 
 async function genApiLinks() {
   const response = await fetch("/api/get/users");
   // error handling ?.. whats that? (tbh if the backend isnt up the frontend wouldnt be served so like :P)
-  request.json().then((data) => {
+  response.json().then((data) => {
     data.users.forEach((user) => {
       makeLink(user.username, user.url);
     });
