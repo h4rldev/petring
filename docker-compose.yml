@@ -16,6 +16,7 @@ services:
 
     volumes:
       - ./petring.db:/app/petring.db
+      - ./petring.toml:/app/petring.toml
 
   collar:
     container_name: collar
