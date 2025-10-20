@@ -1,7 +1,7 @@
 default:
     just --list
 
-@migrations +args="":
-    mv ../petring.db .
-    cargo run -- {{args}}
-    mv petring.db ../
+@migrations db="petring.db" +args="":
+    mv ../{{ db }} .
+    cargo run --release -- {{ args }}
+    mv {{ db }} ../
