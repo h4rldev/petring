@@ -1,0 +1,37 @@
+# You will need a .env for this docker-compose file
+
+services:
+  petring:
+    container_name: petring
+    build:
+      args:
+        - DB_NAME=${DB_NAME} # name.db
+        - DATABASE_URL=${DATABASE_URL} # sqlite://name.db
+
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - BOT_TOKEN=${BOT_TOKEN}
+
+    volumes:
+      - ./petring.db:/app/petring.db
+      - ./petring.toml:/app/petring.toml
+
+  collar:
+    container_name: collar
+    build: https://github.com/h4rldev/collar.git#main
+
+    environment:
+      - DISCORD_BOT_TOKEN=${BOT_TOKEN}
+      - WEBRING_BASE_URL=${WEBRING_BASE_URL}
+      - BOT_ID=${BOT_ID}
+
+    volumes:
+      - collar-data:/app
+
+volumes:
+  collar-data:
+
+networks:
+  petring:
