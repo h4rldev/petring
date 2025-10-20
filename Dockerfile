@@ -13,7 +13,6 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY migration ./migration/
-COPY frontend ./frontend/
 COPY src ./src/
 COPY templates ./templates/
 COPY Cargo.toml .
@@ -25,6 +24,7 @@ FROM debian:trixie-slim
 
 WORKDIR /app
 
+COPY frontend ./frontend/
 COPY --from=builder /app/target/release/petring ./petring
 
 ENTRYPOINT ["./petring"]
