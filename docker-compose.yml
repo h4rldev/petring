@@ -15,7 +15,7 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
 
     volumes:
-      - ./docker-data/:/app
+      - ./petring.db:/app/petring.db
 
   collar:
     container_name: collar
