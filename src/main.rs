@@ -1,26 +1,26 @@
 use askama::Template;
 use axum::{
+    Router,
     body::Body,
     extract::Request,
     http::{
-        header::{self, CACHE_CONTROL, CONTENT_SECURITY_POLICY},
         HeaderValue, Method, Response, StatusCode,
+        header::{self, CACHE_CONTROL, CONTENT_SECURITY_POLICY},
     },
     middleware::from_fn_with_state,
     response::{Html, IntoResponse, Response as AxumResponse},
     routing::{delete, get, post, put},
-    Router,
 };
 use axum_extra::routing::RouterExt;
 use petring::{
+    IoResult,
     api::{
         protected::{self, petads, petring as petring_protected},
         public,
     },
     cli::init,
-    config::{string_to_ip, Level},
+    config::{Level, string_to_ip},
     state::AppState,
-    IoResult,
 };
 use std::{
     convert::Infallible,
@@ -28,24 +28,24 @@ use std::{
     path::PathBuf,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tower::{service_fn, ServiceBuilder};
+use tower::{ServiceBuilder, service_fn};
 use tower_http::{
+    CompressionLevel,
     compression::{
-        predicate::{NotForContentType, SizeAbove},
         CompressionLayer, Predicate,
+        predicate::{NotForContentType, SizeAbove},
     },
     cors::{AllowOrigin, CorsLayer},
     decompression::RequestDecompressionLayer,
     services::ServeDir,
     set_header::SetResponseHeaderLayer,
     trace::{DefaultMakeSpan, TraceLayer},
-    CompressionLevel,
 };
 #[allow(unused_imports)]
 use tracing::{debug, error, info, trace, warn};
 use tracing_subscriber::{
     field::MakeExt,
-    fmt::{format::debug_fn, Subscriber},
+    fmt::{Subscriber, format::debug_fn},
 };
 
 use axum_server::tls_rustls::RustlsConfig;
@@ -219,7 +219,7 @@ async fn main() -> IoResult<()> {
                 ))
                 .layer(SetResponseHeaderLayer::if_not_present(
                     CONTENT_SECURITY_POLICY,
-                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog;"),
+                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src https://discord.com;"),
                 ))
                 .layer(cors_public),
         )

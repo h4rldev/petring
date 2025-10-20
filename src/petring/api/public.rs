@@ -1,4 +1,5 @@
 use super::{
+    PetRingResult, Serializeableuser, UsersResponse,
     database::{
         ads,
         entities::{Ads, Users},
@@ -6,16 +7,15 @@ use super::{
     },
     petring_api_err, petring_api_response,
     state::AppState,
-    PetRingResult, Serializeableuser, UsersResponse,
 };
 use crate::APP_START;
 use axum::{
     extract::{Path, State},
-    http::{header::LOCATION, HeaderMap, HeaderValue, StatusCode},
+    http::{HeaderMap, HeaderValue, StatusCode, header::LOCATION},
     response::{Html, IntoResponse},
 };
 use humantime::format_duration;
-use rand::{rngs::StdRng, seq::IndexedRandom, SeedableRng};
+use rand::{SeedableRng, rngs::StdRng, seq::IndexedRandom};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, QueryOrder};
 use serde::Serialize;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -116,11 +116,11 @@ pub async fn get_server_info() -> impl IntoResponse {
         StatusCode::OK,
         ServerInfo {
             name: "petring".to_string(),
-            version: "0.0.1".to_string(),
+            version: "0.1.0".to_string(),
             description: "A webring for the Jess Museum Discord server".to_string(),
             source: "https://github.com/h4rldev/petring".to_string(),
             authors: ["h4rl".to_string(), "doloro".to_string()],
-            license: "Undecided".to_string(),
+            license: "BSD 3-Clause License".to_string(),
             server_uptime: format_duration(app_uptime).to_string(),
             system_uptime: format_duration(system_uptime).to_string(),
         },
