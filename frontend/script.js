@@ -68,8 +68,6 @@ async function genApiLinks() {
       makeLink(user.username, user.url);
     });
   });
-  calculateRotations();
-  meow();
 }
 
 // creates new spin-item element to be added to spin-items-wrapper
@@ -129,4 +127,6 @@ function main() {
     genApiLinks();
     meowmeow();
   }
+  calculateRotations();
+  meow();
 }
