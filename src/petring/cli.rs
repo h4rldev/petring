@@ -19,7 +19,7 @@ use tracing::info;
 "#
 )]
 pub struct Cli {
-    #[clap(short, long, default_value = "webring.toml")]
+    #[clap(short, long, default_value = "petring.toml")]
     pub config: PathBuf,
     #[clap(short, long, help = "Toggle TLS")]
     pub tls: bool,
