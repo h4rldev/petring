@@ -14,6 +14,12 @@ services:
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - BOT_TOKEN=${BOT_TOKEN}
 
+    ports:
+      - 8080:8080
+
+    networks:
+      - petring
+
     volumes:
       - ./petring.db:/app/petring.db
       - ./petring.toml:/app/petring.toml
@@ -21,6 +27,9 @@ services:
   collar:
     container_name: collar
     build: https://github.com/h4rldev/collar.git#main
+
+    networks:
+      - petring
 
     environment:
       - DISCORD_BOT_TOKEN=${BOT_TOKEN}
