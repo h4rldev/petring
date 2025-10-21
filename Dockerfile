@@ -12,10 +12,18 @@ RUN apt-get update && apt-get install -y \
 # Set up workspace
 WORKDIR /app
 
+## Magic Cache, this sections builds ONLY dependencies
+RUN cargo install cargo-chef --locked
+
+COPY Cargo.toml .
+COPY Cargo.lock .
+
+RUN cargo chef cook --release --recipe-path recipe.json
+##
+
 COPY migration ./migration/
 COPY src ./src/
 COPY templates ./templates/
-COPY Cargo.toml .
 COPY justfile .
 
 RUN just build
