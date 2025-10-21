@@ -13,7 +13,7 @@ use axum::{
     body::Body,
     extract::State,
     http::{
-        Request, StatusCode,
+        HeaderValue, Method, Request, StatusCode,
         header::{AUTHORIZATION, CONTENT_TYPE},
     },
     middleware::Next,
@@ -143,16 +143,16 @@ pub async fn require_auth(
 
     let content_type = request.headers().get(CONTENT_TYPE).ok_or(petring_api_err(
         StatusCode::BAD_REQUEST,
-        "Wrong content type",
+        "Missing content type",
     ))?;
+
+    let json_content_type = &HeaderValue::from_static("application/json");
 
     let token = authorization.to_str().unwrap().split_at(7).1;
     let token_secrets = state.token_secrets.lock().await;
     match jwt::verify_token(token, &token_secrets) {
         Ok(_) => {
-            if content_type != "application/json"
-                || content_type != "application/x-www-form-urlencoded"
-            {
+            if request.method() != Method::GET && content_type != json_content_type {
                 return Err(petring_api_err(
                     StatusCode::BAD_REQUEST,
                     "Wrong content type",
