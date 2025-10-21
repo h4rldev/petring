@@ -31,7 +31,8 @@ body {
 /* rewrite */
 
 .header-meow {
-  display: flex;
+  /* display: flex; */
+	align-content: center; /* so i can move the nav-ad to the right, when display: flex; is uncommented it doesnt work. */
   background: radial-gradient(
     at bottom,
     var(--primary) 0%,
@@ -56,6 +57,7 @@ body {
 .header-inner {
   display: flex;
   flex-direction: row;
+	align-items: center; /* vertically center */
   @media (orientation: portrait) {
     flex-direction: column;
   }
@@ -118,7 +120,25 @@ body {
   }
 }
 
+.filler {
+	flex: 1 1 auto;
+}
+
+.icon {
+	  display: block;
+    width: 45px;
+    height: 45px;
+		img {
+			width: 45px;
+			height: 45px;
+		}
+		img:hover {
+		}
+		margin-right: 10px;
+}
+
 .nav-element {
+	align-content: center;
   a {
     transition: text-decoration-color 0.2s ease-in-out;
     transition: color 0.2s ease-in-out;
@@ -144,6 +164,53 @@ body {
     text-decoration-color: lightblue;
     color: white;
   }
+}
+
+.nav-ad {
+	/* height: 49px; */
+	align-items: anchor-center;
+	align-content: center;
+	align-self: center;
+	a {
+		height: 49px
+	}
+}
+
+.nav-ad-inner {
+	    border: 3px solid var(--primary);
+    border-radius: 15px;
+		padding: 10px;
+		margin-right: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+		align-items: center;
+		background-color: white;
+		p {
+			color: black;
+			margin: 0px;
+		}
+		a:link {
+			color: lightblue;
+  	}
+
+		a:visited {
+			color: lightblue;
+		}
+
+		a:visited {
+			color: lightblue;
+		}
+
+		a:hover {
+			text-decoration-color: lightblue;
+			color: white;
+		}
+		img {
+			height: auto;
+			width: 30px;
+			margin-left: 5px;
+		}
 }
 
 .info-block {
