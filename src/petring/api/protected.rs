@@ -141,12 +141,21 @@ pub async fn require_auth(
         "No authorization header",
     ))?;
 
-    let content_type = request.headers().get(CONTENT_TYPE).ok_or(petring_api_err(
-        StatusCode::BAD_REQUEST,
-        "Missing content type",
-    ))?;
+    let content_type = if request.method() != Method::GET {
+        request
+            .headers()
+            .get(CONTENT_TYPE)
+            .ok_or(petring_api_err(
+                StatusCode::BAD_REQUEST,
+                "Missing content type",
+            ))?
+            .to_str()
+            .expect("Invalid content-type")
+    } else {
+        ""
+    };
 
-    let json_content_type = &HeaderValue::from_static("application/json");
+    let json_content_type = "application/json";
 
     let token = authorization.to_str().unwrap().split_at(7).1;
     let token_secrets = state.token_secrets.lock().await;
