@@ -181,7 +181,10 @@ async fn main() -> IoResult<()> {
             post(petring_protected::post_user_submit),
         )
         .route_with_tsr("/api/post/ad/submit", post(petads::post_ad_submit))
-        .route_with_tsr("/api/put/ad/verify", post(petads::put_ad_verify))
+        .route_with_tsr(
+            "/api/put/ad/verify/{discord_user_id}",
+            post(petads::put_ad_verify),
+        )
         .route_with_tsr("/api/put/ad/edit", put(petads::put_ad_edit))
         .route_with_tsr(
             "/api/delete/ad/by-discord/{discord_id}",
@@ -219,7 +222,7 @@ async fn main() -> IoResult<()> {
                 ))
                 .layer(SetResponseHeaderLayer::if_not_present(
                     CONTENT_SECURITY_POLICY,
-                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src https://discord.com;"),
+                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src 'self' https://discord.com;"),
                 ))
                 .layer(cors_public),
         )
