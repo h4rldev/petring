@@ -1,10 +1,10 @@
-use super::{database, jwt, state, PetRingResult};
+use super::{PetRingResult, database, jwt, state};
 
 use axum::{
+    Json,
     body::Body,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 #[allow(unused_imports)]
@@ -12,6 +12,25 @@ use tracing::{debug, error, info};
 
 pub mod protected;
 pub mod public;
+
+#[derive(Serialize)]
+struct ServerInfo {
+    name: String,
+    version: String,
+    description: String,
+    authors: [String; 2],
+    license: String,
+    source: String,
+    server_uptime: String,
+    system_uptime: String,
+}
+
+#[derive(Serialize)]
+struct PublicAdResponse {
+    pub username: String,
+    pub image_url: String,
+    pub ad_url: String,
+}
 
 #[derive(Serialize)]
 struct UserResponse {

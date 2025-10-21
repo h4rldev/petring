@@ -260,7 +260,7 @@ pub async fn bulk_delete_users(
     }
 }
 
-pub async fn put_user_verify(
+pub async fn patch_user_verify(
     State(state): State<AppState>,
     Path(discord_user_id): Path<u64>,
 ) -> impl IntoResponse {
@@ -369,7 +369,7 @@ pub async fn post_user_submit(
     }
 }
 
-pub async fn put_user_edit(
+pub async fn patch_user_edit(
     State(state): State<AppState>,
     Json(submission): Json<UserEdit>,
 ) -> impl IntoResponse {

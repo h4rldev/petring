@@ -2,20 +2,22 @@ pub mod petads;
 pub mod petring;
 
 use super::{
-    database, jwt, petring_api_err, petring_api_response,
-    state::{self, AppState},
     AdEditRequest, AdResponse, AdSubmission, BulkAdDeleteRequest, BulkAdDeleteResponse,
     BulkUserDeleteRequest, BulkUserDeleteResponse, EditUserResponse, UserEdit, UserResponse,
-    UserSubmission,
+    UserSubmission, database, jwt, petring_api_err, petring_api_response,
+    state::{self, AppState},
 };
 
 use axum::{
+    Json,
     body::Body,
     extract::State,
-    http::{header::AUTHORIZATION, Request, StatusCode},
+    http::{
+        Request, StatusCode,
+        header::{AUTHORIZATION, CONTENT_TYPE},
+    },
     middleware::Next,
     response::{IntoResponse, Response},
-    Json,
 };
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -134,16 +136,30 @@ pub async fn require_auth(
     request: Request<Body>,
     next: Next,
 ) -> Result<Response, Response> {
-    let headers = request.headers().get(AUTHORIZATION).ok_or(petring_api_err(
+    let authorization = request.headers().get(AUTHORIZATION).ok_or(petring_api_err(
         StatusCode::UNAUTHORIZED,
         "No authorization header",
     ))?;
 
-    let token = headers.to_str().unwrap().split_at(7).1;
-    //info!("token: {token}");
+    let content_type = request.headers().get(CONTENT_TYPE).ok_or(petring_api_err(
+        StatusCode::BAD_REQUEST,
+        "Wrong content type",
+    ))?;
+
+    let token = authorization.to_str().unwrap().split_at(7).1;
     let token_secrets = state.token_secrets.lock().await;
     match jwt::verify_token(token, &token_secrets) {
-        Ok(_) => Ok(next.run(request).await),
+        Ok(_) => {
+            if content_type != "application/json"
+                || content_type != "application/x-www-form-urlencoded"
+            {
+                return Err(petring_api_err(
+                    StatusCode::BAD_REQUEST,
+                    "Wrong content type",
+                ));
+            }
+            Ok(next.run(request).await)
+        }
         Err(_) => {
             info!("Failed to verify token, invalid token: {token}");
             Err(petring_api_err(StatusCode::UNAUTHORIZED, "Invalid token"))
