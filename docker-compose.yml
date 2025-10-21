@@ -1,14 +1,22 @@
 # You will need a .env for this docker-compose file
 
+# Deployment :
+# uncomment image var in petring
+# comment out build: . in petring
+# uncomment the entire watchtower section
+# uncomment traefik if needed
+
 services:
   petring:
     container_name: petring
     build: .
+    # image: ghcr.io/h4rldev/petring-backend:latest
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - BOT_TOKEN=${BOT_TOKEN}
+    labels: [ "com.centurylinklabs.watchtower.scope=petring" ]
 
     ports:
       - 8080:8080
@@ -20,6 +28,13 @@ services:
       - ./petring.db:/app/petring.db
       - ./petring.toml:/app/petring.toml
       - ./frontend/:/app/frontend/
+#   watchtower: # For auto-updates
+#     image: containrrr/watchtower
+#     container_name: watchtower_petring
+#     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+#     command: --interval 30 --scope petring
+#     labels: [ "com.centurylinklabs.watchtower.scope=petring" ]
+
 # networks: # For use with traefik
 #   proxy:
 #     name: "proxy"
