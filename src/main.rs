@@ -9,7 +9,7 @@ use axum::{
     },
     middleware::from_fn_with_state,
     response::{Html, IntoResponse, Response as AxumResponse},
-    routing::{delete, get, post, put},
+    routing::{delete, get, patch, post},
 };
 use axum_extra::routing::RouterExt;
 use petring::{
@@ -124,7 +124,7 @@ async fn main() -> IoResult<()> {
     let cors_public = if cfg!(debug_assertions) {
         CorsLayer::new()
             .allow_origin(AllowOrigin::any())
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+            .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
             .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
             .max_age(Duration::from_secs(60 * 60 * 24 * 7))
     } else {
@@ -137,7 +137,7 @@ async fn main() -> IoResult<()> {
 
     let cors_protected = CorsLayer::new()
         .allow_origin(AllowOrigin::any())
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
         .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
         .max_age(Duration::from_secs(60 * 60 * 24 * 7));
 
@@ -171,18 +171,24 @@ async fn main() -> IoResult<()> {
             "/api/delete/users",
             delete(petring_protected::bulk_delete_users),
         )
-        .route_with_tsr("/api/put/user/edit", put(petring_protected::put_user_edit))
         .route_with_tsr(
-            "/api/put/user/verify/{discord_user_id}",
-            put(petring_protected::put_user_verify),
+            "/api/patch/user/edit",
+            patch(petring_protected::patch_user_edit),
+        )
+        .route_with_tsr(
+            "/api/patch/user/verify/{discord_user_id}",
+            patch(petring_protected::patch_user_verify),
         )
         .route_with_tsr(
             "/api/post/user/submit",
             post(petring_protected::post_user_submit),
         )
         .route_with_tsr("/api/post/ad/submit", post(petads::post_ad_submit))
-        .route_with_tsr("/api/put/ad/verify", post(petads::put_ad_verify))
-        .route_with_tsr("/api/put/ad/edit", put(petads::put_ad_edit))
+        .route_with_tsr(
+            "/api/patch/ad/verify/{discord_user_id}",
+            patch(petads::patch_ad_verify),
+        )
+        .route_with_tsr("/api/patch/ad/edit", patch(petads::patch_ad_edit))
         .route_with_tsr(
             "/api/delete/ad/by-discord/{discord_id}",
             delete(petads::delete_ad_by_discord_id),
@@ -219,7 +225,7 @@ async fn main() -> IoResult<()> {
                 ))
                 .layer(SetResponseHeaderLayer::if_not_present(
                     CONTENT_SECURITY_POLICY,
-                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src https://discord.com;"),
+                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src 'self' https://discord.com;"),
                 ))
                 .layer(cors_public),
         )
