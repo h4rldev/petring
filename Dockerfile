@@ -1,5 +1,13 @@
+FROM rust:slim-trixie AS chef
+RUN cargo install cargo-chef
+WORKDIR app
+
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
 # Single stage using Alpine
-FROM rust:slim-trixie AS builder
+FROM chef AS builder
 
 # Install SQLite and just from Alpine repository
 RUN apt-get update && apt-get install -y \
@@ -9,18 +17,8 @@ RUN apt-get update && apt-get install -y \
     gcc \
 		sqlite3
 
-# Set up workspace
-WORKDIR /app
-
-## Magic Cache, this sections builds ONLY dependencies
-RUN cargo install cargo-chef --locked
-
-COPY Cargo.toml .
-COPY Cargo.lock .
-
-RUN cargo chef prepare --recipe-path recipe.json
+COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
-##
 
 COPY migration ./migration/
 COPY src ./src/
@@ -29,7 +27,7 @@ COPY justfile .
 
 RUN just build
 
-FROM debian:trixie-slim
+FROM debian:trixie-slim AS runtime
 
 WORKDIR /app
 
