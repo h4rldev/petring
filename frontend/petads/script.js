@@ -10,10 +10,11 @@ function flipCoin() {
   return false;
 }
 
+const promo_link_element = document.getElementById("promo-link");
+
 async function getRandomAd() {
   const image_element = document.getElementById("image");
   const image_link_element = document.getElementById("image-link");
-  const promo_link_element = document.getElementById("promo-link");
   let response;
 
   try {
@@ -30,12 +31,7 @@ async function getRandomAd() {
     image_element.src = data.image_url;
     image_element.alt = data.username;
     image_link_element.href = data.ad_url;
-
-    if (window.location.port !== undefined) {
-      promo_link_element.href = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/petads`;
-    } else {
-      promo_link_element.href = `${window.location.protocol}//${window.location.hostname}/petads`;
-    }
+    promo_link_element.innerText = `from ${data.username} (click here for more info about PetAds)`;
   } catch (error) {
     console.error("Error fetching ad:", error);
 
@@ -46,6 +42,12 @@ async function getRandomAd() {
     document.title = error.cause.message;
   }
   setTimeout(getRandomAd, 30000);
+}
+
+if (window.location.port !== undefined) {
+  promo_link_element.href = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/`;
+} else {
+  promo_link_element.href = `${window.location.protocol}//${window.location.hostname}/`;
 }
 
 getRandomAd();

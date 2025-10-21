@@ -1,5 +1,5 @@
 use super::{
-    PetRingResult, Serializeableuser, UsersResponse,
+    PetRingResult, PublicAdResponse, Serializeableuser, ServerInfo, UsersResponse,
     database::{
         ads,
         entities::{Ads, Users},
@@ -23,19 +23,13 @@ use tokio::{fs::File, io::AsyncReadExt};
 #[allow(unused_imports)]
 use tracing::{debug, error, info};
 
-#[derive(Serialize)]
-struct PublicAdResponse {
-    pub username: String,
-    pub image_url: String,
-    pub ad_url: String,
-}
-
 pub async fn get_public_api_index() -> impl IntoResponse {
     let current_endpoints = [
         "/get/server-info",
         "/get/uptime",
         "/get/users",
         "/get/users/random",
+        "/get/random-ad",
     ];
 
     let wrap_endpoints_with_hyperlinks = current_endpoints
@@ -46,8 +40,8 @@ pub async fn get_public_api_index() -> impl IntoResponse {
     (
         StatusCode::OK,
         Html(format!(
-            "<h1>petring's shittily hardcoded public api reference!</h1>
-            <p>Use the links below to access the API endpoints: <br />
+            "<h1>PetRing's shittily hardcoded Public API reference!</h1>
+            <p>Use the links below to access the Public API endpoints: <br />
             <small>(None of these need authentication, so you can simply access them by going to <code>/api/&lcub;endpoint&rcub;</code> in your browser.)</small>
             </p>
             <p>Note: The API is still under development, so some endpoints may not work as expected.</p>
@@ -58,18 +52,6 @@ pub async fn get_public_api_index() -> impl IntoResponse {
             wrap_endpoints_with_hyperlinks.join("\n")
         )),
     )
-}
-
-#[derive(Serialize)]
-struct ServerInfo {
-    name: String,
-    version: String,
-    description: String,
-    authors: [String; 2],
-    license: String,
-    source: String,
-    server_uptime: String,
-    system_uptime: String,
 }
 
 async fn get_app_uptime() -> PetRingResult<Duration> {
