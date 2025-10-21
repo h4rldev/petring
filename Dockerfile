@@ -18,6 +18,7 @@ RUN cargo install cargo-chef --locked
 COPY Cargo.toml .
 COPY Cargo.lock .
 
+RUN cargo chef prepare --recipe-path recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 ##
 
