@@ -11,7 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: Check for open PRs
+        id: prcheck
+        run: |
+          OPEN_PRS=$(gh pr list --base your-branch --state open --json number | jq '. | length')
+          if [ "$OPEN_PRS" -gt 0 ]; then
+            echo "has_open_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_open_pr=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: pull-request
+    if: steps.prcheck.outputs.has_open_pr == 'false'
     uses: diillson/auto-pull-request@v1.0.1
       with:
         destination_branch: "main"
