@@ -31,5 +31,5 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/h4rldev/petring-backend:latest
-          cache-from: type=registry,ref=ghcr.io/h4rldev/petring-backend:latest
-          cache-to: type=inline,mode=min
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
