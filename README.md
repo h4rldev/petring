@@ -45,6 +45,7 @@ just build
 - Initialize the database
 - Setup your `.env` file according to the `.env.example` file
 - Run migrations
+- Go into the docker-compose.yml and uncomment/comment out the lines according to what you need.
 - Run the docker-compose
 
 ## Contributing
