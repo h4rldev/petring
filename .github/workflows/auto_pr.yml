@@ -22,9 +22,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: pull-request
-      - if: steps.prcheck.outputs.has_open_pr == 'false'
-      - uses: diillson/auto-pull-request@v1.0.1
-      - with:
+        if: steps.prcheck.outputs.has_open_pr == 'false'
+        uses: diillson/auto-pull-request@v1.0.1
+        with:
           destination_branch: main
           pr_title: Auto(Pulling ${{ github.ref }} into master)
           pr_body: ":crown: *An automated PR*"
