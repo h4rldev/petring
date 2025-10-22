@@ -28,7 +28,7 @@ FROM debian:trixie-slim AS runtime
 
 WORKDIR /app
 
-COPY . .
+COPY ./frontend/ ./frontend
 COPY --from=builder /app/target/release/petring ./petring
 
 ENTRYPOINT ["./petring"]
