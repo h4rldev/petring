@@ -3,6 +3,9 @@ on:
     branches:
       - backend
       - frontend
+permissions:
+  contents: write      # Allows pushing commits
+  pull-requests: write # Allows creating/updating PRs
 jobs:
   pull-request:
     runs-on: ubuntu-latest
