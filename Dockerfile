@@ -1,11 +1,13 @@
 FROM rust:slim-trixie AS chef
 RUN cargo install cargo-chef
+
 WORKDIR /app
 
 FROM chef AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
+FROM chef AS builder
 FROM chef AS builder
 
 WORKDIR /app
