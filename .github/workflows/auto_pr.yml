@@ -32,7 +32,7 @@ jobs:
         id: get-commits
         if: steps.prcheck.outputs.has_open_pr == 'false'
         run: |
-          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" ${{ github.event.base_ref }}..${{ github.event.head_ref }})
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" ${{ github.base_ref }}..${{ github.head_ref }})
           echo "COMMIT_MESSAGES=$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
 
       - name: pull-request
