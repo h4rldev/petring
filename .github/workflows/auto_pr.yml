@@ -27,6 +27,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get commits
+        id: get-commits
         if: steps.prcheck.outputs.has_open_pr == 'false'
         run: |
           COMMIT_MESSAGES=$(git log $(git merge-base main ${GITHUB_REF##*/})..${GITHUB_REF##*/} --format=%s)
@@ -39,10 +40,10 @@ jobs:
           destination_branch: main
           pr_title: "auto: Pull ${{ github.ref }} into main"
           pr_body: |
-            "# Changelog"
-            ""
+            # Changelog
+
             "${{ steps.get-commits.outputs.COMMIT_MESSAGES }}"
-            ""
-            "This PR is automatically generated, do not merge, unless ready to do so!"
+
+            This PR is automatically generated, do not merge, unless ready to do so!
           pr_draft: true
           pr_allow_empty: false
