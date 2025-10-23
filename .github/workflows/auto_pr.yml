@@ -1,20 +1,23 @@
 on:
   push:
     branches:
-      - backend
-      - frontend
+      - dev
+
 permissions:
-  contents: write      # Allows pushing commits
+  contents: write # Allows pushing commits
   pull-requests: write # Allows creating/updating PRs
+
 jobs:
   pull-request:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check for open PRs
         id: prcheck
         run: >
-          OPEN_PRS=$(gh pr list --base your-branch --state open --json number | jq '.
+          OPEN_PRS=$(gh pr list --head dev --state open --json number | jq '.
           | length')
 
           if [ "$OPEN_PRS" -gt 0 ]; then
@@ -24,12 +27,46 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: pull-request
+
+      - name: Get commits
+        id: get-commits
+        if: steps.prcheck.outputs.has_open_pr == 'false'
+        run: |
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" origin/main..origin/dev)
+          DELIMITER=$(openssl rand -hex 8)
+          echo "COMMIT_MESSAGES<<${DELIMITER}" >> $GITHUB_OUTPUT
+          echo "$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
+          echo "${DELIMITER}" >> $GITHUB_OUTPUT
+
+      - name: Open PR
         if: steps.prcheck.outputs.has_open_pr == 'false'
         uses: diillson/auto-pull-request@v1.0.1
         with:
           destination_branch: main
-          pr_title: Auto(Pulling ${{ github.ref }} into master)
-          pr_body: ":crown: *An automated PR*"
+          pr_title: "auto: Pull dev into main"
+          pr_body: |
+            # Changelog
+
+            ${{ steps.get-commits.outputs.COMMIT_MESSAGES }}
+
+            > [!NOTE]
+            > This pull request was generated automatically from the `dev` branch.
           pr_draft: true
           pr_allow_empty: false
+
+      - name: Edit Existing PR
+        if: steps.prcheck.outputs.has_open_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --head dev --state open --json number --limit 1 | jq '.[0].number')
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" origin/main..origin/dev)
+          gh pr edit $PR_NUMBER \
+            --title "auto: Pull dev into main" \
+            --body \
+          "# Changelog
+
+          ${COMMIT_MESSAGES}
+
+          > [!NOTE]
+          > This pull request was generated automatically from the \`dev\` branch."
