@@ -45,26 +45,20 @@ just build
 - Initialize the database
 - Setup your `.env` file according to the `.env.example` file
 - Run migrations
-- Go into the docker-compose.yml and uncomment/comment out the lines according to what you need.
+- Edit the docker-compose.yml
+  (uncomment/comment out the lines according to what you need.)
 - Run the docker-compose
 
 ## Contributing
 
-> [!NOTE]
-> As of the 21st of October, 2025, your commits require squashing for a valid PR.
-
 ### For people without write access
 
 - Fork the repo
-- Check out a new branch
-- Depending on what you're contributing to,
-  checkout something based on either of following branches:
-  - [backend](https://github.com/h4rldev/petring/tree/backend)
-  - [frontend](https://github.com/h4rldev/petring/tree/frontend)
-- If its not related to either of the above, base your fork branch on [main](https://github.com/h4rldev/petring/tree/main)
+- Check out a new branch based on [dev](https://github.com/h4rldev/petring/tree/dev)
 - Make your changes
-- Submit a PR to the relevant branch you checked out from
-  describing your changes.
+- Test your changes locally.
+- If you want to be considerate, follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) spec.
+- Submit a PR describing what you've done
 
 ### For people with write access
 
@@ -73,5 +67,4 @@ just build
 
 ## License
 
-This project is licensed under the BSD-3 Clause License -
-see the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD-3 Clause License, see the [LICENSE](LICENSE) file for details.

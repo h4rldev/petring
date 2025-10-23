@@ -1,11 +1,12 @@
 on:
   push:
     branches:
-      - backend
-      - frontend
+      - dev
+
 permissions:
-  contents: write      # Allows pushing commits
+  contents: write # Allows pushing commits
   pull-requests: write # Allows creating/updating PRs
+
 jobs:
   pull-request:
     runs-on: ubuntu-latest
@@ -14,7 +15,7 @@ jobs:
       - name: Check for open PRs
         id: prcheck
         run: >
-          OPEN_PRS=$(gh pr list --base your-branch --state open --json number | jq '.
+          OPEN_PRS=$(gh pr list --base dev --state open --json number | jq '.
           | length')
 
           if [ "$OPEN_PRS" -gt 0 ]; then
@@ -24,12 +25,24 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get commits
+        if: steps.prcheck.outputs.has_open_pr == 'false'
+        run: |
+          COMMIT_MESSAGES=$(git log $(git merge-base main ${GITHUB_REF##*/})..${GITHUB_REF##*/} --format=%s)
+          echo "COMMIT_MESSAGES=$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
+
       - name: pull-request
         if: steps.prcheck.outputs.has_open_pr == 'false'
         uses: diillson/auto-pull-request@v1.0.1
         with:
           destination_branch: main
-          pr_title: Auto(Pulling ${{ github.ref }} into master)
-          pr_body: ":crown: *An automated PR*"
+          pr_title: "auto: Pull ${{ github.ref }} into main"
+          pr_body: |
+            "# Changelog"
+            ""
+            "${{ steps.get-commits.outputs.COMMIT_MESSAGES }}"
+            ""
+            "This PR is automatically generated, do not merge, unless ready to do so!"
           pr_draft: true
           pr_allow_empty: false
