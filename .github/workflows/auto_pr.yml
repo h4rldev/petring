@@ -17,7 +17,7 @@ jobs:
       - name: Check for open PRs
         id: prcheck
         run: >
-          OPEN_PRS=$(gh pr list --base dev --state open --json number | jq '.
+          OPEN_PRS=$(gh pr list --head dev --state open --json number | jq '.
           | length')
 
           if [ "$OPEN_PRS" -gt 0 ]; then
@@ -38,17 +38,35 @@ jobs:
           echo "$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
           echo "${DELIMITER}" >> $GITHUB_OUTPUT
 
-      - name: pull-request
+      - name: Open PR
         if: steps.prcheck.outputs.has_open_pr == 'false'
         uses: diillson/auto-pull-request@v1.0.1
         with:
           destination_branch: main
-          pr_title: "auto: Pull ${{ github.ref }} into main"
+          pr_title: "auto: Pull dev into main"
           pr_body: |
             # Changelog
 
             ${{ steps.get-commits.outputs.COMMIT_MESSAGES }}
 
-            This PR is automatically generated, do not merge, unless ready to do so!
+            > [!NOTE]
+            > This pull request was generated automatically from the `dev` branch.
           pr_draft: true
           pr_allow_empty: false
+
+      - name: Edit Existing PR
+        if: steps.prcheck.outputs.has_open_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list --head dev --state open --json number --limit 1 | jq '.[0].number')
+          COMMIT_MESSAGES=$(git log --pretty=format:"- %s" origin/main..origin/dev)
+          gh pr edit $PR_NUMBER \
+            --title "auto: Pull dev into main" \
+            --body \
+          "# Changelog
+
+          ${COMMIT_MESSAGES}
+
+          > [!NOTE]
+          > This pull request was generated automatically from the \`dev\` branch."
