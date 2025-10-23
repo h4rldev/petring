@@ -30,6 +30,7 @@ jobs:
         id: get-commits
         if: steps.prcheck.outputs.has_open_pr == 'false'
         run: |
+          echo "GITHUB_REF: $GITHUB_REF"
           COMMIT_MESSAGES=$(git log origin/dev..${GITHUB_REF##*/} --format=%s)
           echo "COMMIT_MESSAGES=$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
 
@@ -42,7 +43,7 @@ jobs:
           pr_body: |
             # Changelog
 
-            "${{ steps.get-commits.outputs.COMMIT_MESSAGES }}"
+            ${{ steps.get-commits.outputs.COMMIT_MESSAGES }}
 
             This PR is automatically generated, do not merge, unless ready to do so!
           pr_draft: true
