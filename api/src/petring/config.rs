@@ -17,15 +17,9 @@ impl Level {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
-    pub site: SiteConfig,
     pub tls: TlsConfig,
     pub network: NetworkConfig,
     pub logging: LoggingConfig,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct SiteConfig {
-    pub root: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -81,7 +75,7 @@ impl From<String> for Level {
 
 impl Config {
     pub fn load() -> PetRingResult<Self> {
-        let config = match fs::read_to_string("petring.toml") {
+        let config = match fs::read_to_string("petring-api.toml") {
             Ok(config) => config,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
@@ -98,25 +92,6 @@ impl Config {
         Ok(config)
     }
 
-    pub fn load_from_file(path: &PathBuf) -> PetRingResult<Self> {
-        let config = match fs::read_to_string(path) {
-            Ok(config) => config,
-            Err(e) => {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    return Config::load();
-                }
-                return Err(e.into());
-            }
-        };
-        let config: Config = toml::from_str(&config)?;
-
-        Ok(config)
-    }
-
-    pub fn site(&self) -> &SiteConfig {
-        &self.site
-    }
-
     pub fn tls(&self) -> &TlsConfig {
         &self.tls
     }
@@ -131,9 +106,6 @@ impl Config {
 
     pub fn default() -> Self {
         Self {
-            site: SiteConfig {
-                root: Some(PathBuf::from("static")),
-            },
             tls: TlsConfig {
                 cert: None,
                 key: None,
@@ -142,7 +114,7 @@ impl Config {
             },
             network: NetworkConfig {
                 ip: "0.0.0.0".to_string(),
-                port: 8080,
+                port: 8081,
                 // quic_port: None,
             },
             logging: LoggingConfig {
@@ -152,11 +124,12 @@ impl Config {
     }
 
     pub fn write(&self) -> IoResult<()> {
-        let config = toml::to_string_pretty(self)
-            .map_err(|e| panic!("Couldn't serialize config: {e}"))
-            .unwrap();
-        fs::write("creme-brulee.toml", config)?;
+        let config = match toml::to_string_pretty(self) {
+            Ok(config) => config,
+            Err(e) => panic!("Couldn't serialize config: {e}"),
+        };
 
+        fs::write("petring-api.toml", config)?;
         Ok(())
     }
 }

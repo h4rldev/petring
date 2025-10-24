@@ -1,8 +1,8 @@
 default:
     just --list
 
-@run +args="":
-    cargo run --release -- {{args}}
+@run binary="webserver" +args="":
+    cargo run --release --bin {{binary}} -- {{args}}
 
 @run-dev +args="":
     cargo run -- {{args}}
@@ -14,4 +14,10 @@ default:
     cargo build
 
 @migrations +args="":
-    just --justfile migration/justfile migrations {{args}}
+    just --justfile api/migration/justfile migrations {{args}}
+
+@prepare-migrations:
+		just --justfile api/migration/justfile prepare-bin
+
+@cook-migrations:
+		just --justfile api/migration/justfile cook-bin

@@ -13,7 +13,7 @@ use axum::{
     body::Body,
     extract::State,
     http::{
-        HeaderValue, Method, Request, StatusCode,
+        Method, Request, StatusCode,
         header::{AUTHORIZATION, CONTENT_TYPE},
     },
     middleware::Next,
