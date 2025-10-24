@@ -57,6 +57,7 @@ just build
 - Check out a new branch based on [dev](https://github.com/h4rldev/petring/tree/dev)
 - Make your changes
 - Test your changes locally.
+<!-- markdownlint-disable MD013 -->
 - If you want to be considerate, follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) spec.
 - Submit a PR describing what you've done
 
@@ -64,7 +65,11 @@ just build
 
 - No need to fork the repo, just clone it
 - And then follow the same instructions as above
+<!-- markdownlint-disable MD013 -->
+- When merging auto-prs, also follow the [conventional commits]( spec.
 
 ## License
+
+<!-- markdownlint-disable MD013 -->
 
 This project is licensed under the BSD-3 Clause License, see the [LICENSE](LICENSE) file for details.
