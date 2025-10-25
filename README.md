@@ -124,7 +124,3 @@ cargo build --release --bin petring-web
 <!-- markdownlint-disable MD013 -->
 
 This project is licensed under the BSD-3 Clause License, see the [LICENSE](LICENSE) file for details.
-
-```
-
-```
