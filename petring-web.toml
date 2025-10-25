@@ -1,6 +1,6 @@
 [site]
 root = "frontend"
-api_base_url = "http://localhost:8080"
+api_base_url = "http://localhost:8081"
 
 [tls]
 enable = false

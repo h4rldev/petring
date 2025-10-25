@@ -125,7 +125,7 @@ async fn main() -> IoResult<()> {
         warn!("Root path is empty or failed to unwrap, will only resolve 404 page.");
     }
 
-    let state = AppState::new(api_base_url);
+    let state = AppState::new(api_base_url.clone());
     let compression_predicate = SizeAbove::new(256).and(NotForContentType::IMAGES);
     let cors = CorsLayer::new()
         .allow_origin(AllowOrigin::any())
@@ -149,6 +149,11 @@ async fn main() -> IoResult<()> {
         .route_with_tsr("/api/get/api-url", get(api::get_api_url))
         .layer(cors.clone());
 
+    let csp = format!(
+        "default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' {} https://http.cat https://http.dog; frame-src 'self' https://discord.com;",
+        api_base_url
+    );
+
     let app = Router::new()
         .fallback_service(serve_public)
         .merge(api_routes)
@@ -161,7 +166,7 @@ async fn main() -> IoResult<()> {
                 ))
                 .layer(SetResponseHeaderLayer::if_not_present(
                     CONTENT_SECURITY_POLICY,
-                    HeaderValue::from_static("default-src 'self'; script-src 'self'; script-src-elem 'self'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src 'self' https://http.cat https://http.dog; frame-src 'self' https://discord.com;"),
+                    HeaderValue::from_str(&csp).expect("Couldn't parse CSP header"),
                 ))
                 .layer(cors),
         )
@@ -184,7 +189,8 @@ async fn main() -> IoResult<()> {
                         .quality(CompressionLevel::Fastest)
                         .compress_when(compression_predicate),
                 ),
-        ).with_state(state);
+        )
+        .with_state(state);
     //
     // This adds compression and decompression to the request and response
     // body streams, don't remove it!

@@ -131,7 +131,7 @@ impl Config {
         Self {
             site: SiteConfig {
                 root: Some(PathBuf::from("static")),
-                api_base_url: Some(String::from("http://localhost:8080")),
+                api_base_url: Some(String::from("http://localhost:8081")),
             },
             tls: TlsConfig {
                 cert: None,

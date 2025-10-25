@@ -1,11 +1,11 @@
 default:
     just --list
 
-@run binary="webserver" +args="":
-    cargo run --release --bin {{binary}} -- {{args}}
+@run binary="petring-web" +args="":
+    cargo run --release --bin {{ binary }} -- {{ args }}
 
 @run-dev +args="":
-    cargo run -- {{args}}
+    cargo run -- {{ args }}
 
 @build:
     cargo build --release
@@ -14,10 +14,4 @@ default:
     cargo build
 
 @migrations +args="":
-    just --justfile api/migration/justfile migrations {{args}}
-
-@prepare-migrations:
-		just --justfile api/migration/justfile prepare-bin
-
-@cook-migrations:
-		just --justfile api/migration/justfile cook-bin
+    just --justfile api/migration/justfile migrations {{ args }}
