@@ -32,12 +32,7 @@ body {
 
 .header-meow {
   /* display: flex; */
-	align-content: center; /* so i can move the nav-ad to the right, when display: flex; is uncommented it doesnt work. */
-  background: radial-gradient(
-    at bottom,
-    var(--primary) 0%,
-    var(--secondary) 100%
-  );
+  align-content: center; /* so i can move the nav-ad to the right, when display: flex; is uncommented it doesnt work. */
   min-height: 75px;
 
   align-items: center;
@@ -45,9 +40,6 @@ body {
   margin: 8px;
   margin-bottom: 0px;
 
-  border-radius: 15px;
-
-  border: 3px solid var(--primary);
   outline-offset: 0px;
   @media (orientation: portrait) {
     justify-content: center;
@@ -57,7 +49,7 @@ body {
 .header-inner {
   display: flex;
   flex-direction: row;
-	align-items: center; /* vertically center */
+  align-items: center; /* vertically center */
   @media (orientation: portrait) {
     flex-direction: column;
   }
@@ -79,7 +71,7 @@ body {
   align-items: center;
   gap: 10px;
   padding: 5px;
-  background-color: rgba(77, 99, 71, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
   width: 200px;
   img {
     width: 100%;
@@ -104,6 +96,8 @@ body {
 
 .header-element-list {
   display: flex;
+  flex-wrap: wrap;
+
   list-style: none;
   gap: 20px;
   height: 100%;
@@ -117,28 +111,29 @@ body {
   @media (orientation: portrait) {
     gap: 10px;
     margin-bottom: 10px;
+    justify-content: center;
   }
 }
 
 .filler {
-	flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 .icon {
-	  display: block;
+  display: block;
+  width: 45px;
+  height: 45px;
+  img {
     width: 45px;
     height: 45px;
-		img {
-			width: 45px;
-			height: 45px;
-		}
-		img:hover {
-		}
-		margin-right: 10px;
+  }
+  img:hover {
+  }
+  margin-right: 10px;
 }
 
 .nav-element {
-	align-content: center;
+  align-content: center;
   a {
     transition: text-decoration-color 0.2s ease-in-out;
     transition: color 0.2s ease-in-out;
@@ -166,51 +161,69 @@ body {
   }
 }
 
+.right-buttons {
+  display: flex;
+  flex-direction: row;
+  margin-left: auto;
+  @media (orientation: portrait) {
+    margin: auto;
+  }
+}
+
 .nav-ad {
-	/* height: 49px; */
-	align-items: anchor-center;
-	align-content: center;
-	align-self: center;
-	a {
-		height: 49px
-	}
+  /* height: 49px; */
+  align-items: anchor-center;
+  align-content: center;
+  align-self: center;
+  a {
+    height: 49px;
+  }
 }
 
 .nav-ad-inner {
-	    border: 3px solid var(--primary);
-    border-radius: 15px;
-		padding: 10px;
-		margin-right: 10px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-		align-items: center;
-		background-color: white;
-		p {
-			color: black;
-			margin: 0px;
-		}
-		a:link {
-			color: lightblue;
-  	}
+  border: 3px solid var(--primary);
+  border-radius: 15px;
+  padding: 10px;
+  margin-right: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  background-color: white;
+  p {
+    color: black;
+    margin: 0px;
+  }
+  a:link {
+    color: lightblue;
+  }
 
-		a:visited {
-			color: lightblue;
-		}
+  a:visited {
+    color: lightblue;
+  }
 
-		a:visited {
-			color: lightblue;
-		}
+  a:visited {
+    color: lightblue;
+  }
 
-		a:hover {
-			text-decoration-color: lightblue;
-			color: white;
-		}
-		img {
-			height: auto;
-			width: 30px;
-			margin-left: 5px;
-		}
+  a:hover {
+    text-decoration-color: lightblue;
+    color: white;
+  }
+  img {
+    height: auto;
+    width: 30px;
+    margin-left: 5px;
+  }
+
+  @media (orientation: portrait) {
+    padding: 6px;
+    img {
+      width: 20px;
+      height: auto;
+      margin-left: 5px;
+    }
+  }
 }
 
 .info-block {
@@ -218,25 +231,26 @@ body {
   flex-direction: column;
   align-items: center;
 
-  background: var(--secondary);
+  background: var(--primary);
   outline-offset: 0px;
   width: 100%;
 }
 
 .info-block-inner {
-  width: 95%;
+  width: 65%;
   h1 {
     font-family: "TopazPlus";
   }
   hr {
     background-image: linear-gradient(
       90deg,
-      var(--primary) 30%,
-      var(--secondary) 100%
+      var(--secondary) 30%,
+      var(--accent-1) 100%
     );
 
     border: 0;
-    height: 3px;
+    height: 5px;
+    margin-bottom: 16px;
   }
 }
 
@@ -255,9 +269,6 @@ body {
   font-size: 18px;
   font-family: sans-serif;
   line-height: 1.5;
-  @media (orientation: landscape) {
-    width: 80em;
-  }
 }
 
 .content-block-inner + .content-block-inner {
@@ -268,7 +279,7 @@ body {
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 255) 0%,
-    var(--secondary) 100%
+    var(--primary) 100%
   );
   height: 250px;
   width: 100%;
@@ -281,6 +292,15 @@ body {
     font-family: sans-serif;
     color: white;
     margin: auto;
+  }
+
+  a:link {
+    color: white;
+    text-decoration: none;
+  }
+
+  @media (orientation: portrait) {
+    height: 100px;
   }
 }
 
@@ -374,7 +394,6 @@ body {
   margin-bottom: 1rem;
   margin-top: 1rem;
   display: flex;
-  border-radius: 15px;
   justify-content: center;
   align-items: center;
   aspect-ratio: 1 / 1;
@@ -384,8 +403,6 @@ body {
     width: 95vw;
     min-height: 30vh;
   }
-  background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
-  border: 1px solid var(--primary);
   outline-offset: 0px;
 }
 
@@ -459,17 +476,18 @@ body {
 }
 
 a:link {
-  color: #4b4beb;
+  color: #4b95eb;
 }
 
 a:visited {
-  color: #67418a;
+  color: #9b62d0;
 }
 
 .footer-inner {
-  background-color: var(--secondary);
+  background-color: var(--primary);
+  font-family: sans-serif;
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 30px;
   ul {
     padding: 0px;
     margin: 0px;
@@ -479,6 +497,72 @@ a:visited {
     justify-content: center;
     li {
       list-style: none;
+    }
+  }
+}
+
+.discord-widget {
+  @media (orientation: portrait) {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.petad-embed-example {
+  position: relative;
+
+  @media (orientation: portrait) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  code {
+    position: relative;
+    padding: 10px;
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
+    display: block;
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  button {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    cursor: pointer;
+
+    @media (orientation: portrait) {
+      position: relative;
+      margin-top: 50px;
+      padding: 5px;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+  }
+}
+
+.uptimes {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+
+  ul {
+    diaplay: flex;
+    flex-direction: row;
+    gap: 1rem;
+
+    @media (orientation: portrait) {
+      gap: 5px;
+    }
+  }
+
+  @media (orientation: portrait) {
+    flex-direction: column;
+    gap: 5px;
+    ul {
+      flex-direction: column;
     }
   }
 }

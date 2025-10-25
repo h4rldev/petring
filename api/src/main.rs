@@ -18,14 +18,12 @@ use petring::{
         protected::{self, petads, petring as petring_protected},
         public,
     },
-    cli::init,
     config::{Level, string_to_ip},
     state::AppState,
 };
 use std::{
     convert::Infallible,
     net::SocketAddr,
-    path::PathBuf,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tower::{ServiceBuilder, service_fn};
@@ -37,7 +35,6 @@ use tower_http::{
     },
     cors::{AllowOrigin, CorsLayer},
     decompression::RequestDecompressionLayer,
-    services::ServeDir,
     set_header::SetResponseHeaderLayer,
     trace::{DefaultMakeSpan, TraceLayer},
 };
@@ -49,6 +46,8 @@ use tracing_subscriber::{
 };
 
 use axum_server::tls_rustls::RustlsConfig;
+
+use crate::petring::config::Config;
 
 mod petring;
 
@@ -95,7 +94,13 @@ async fn main() -> IoResult<()> {
     let formatter =
         debug_fn(|writer, field, value| write!(writer, "{field}: {value:?}")).delimited(",");
 
-    let config = init();
+    let config = match Config::load() {
+        Ok(config) => config,
+        Err(e) => {
+            panic!("Failed to load config: {e}");
+        }
+    };
+
     let level: Level = config.logging().level.clone().into();
 
     rustls::crypto::ring::default_provider()
@@ -108,96 +113,95 @@ async fn main() -> IoResult<()> {
         .with_ansi(true)
         .init();
 
-    let root = config.site().root.clone().unwrap_or_else(|| {
-        error!("Invalid root path");
-        PathBuf::new()
-    });
-
-    if !root.exists() {
-        warn!("Root path is empty or failed to unwrap, will only resolve 404 page.");
-    }
-
-    debug!("root: {root:?}");
-
     let state = AppState::new().await;
     let compression_predicate = SizeAbove::new(256).and(NotForContentType::IMAGES);
     let cors_public = if cfg!(debug_assertions) {
         CorsLayer::new()
             .allow_origin(AllowOrigin::any())
-            .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+            .allow_methods([
+                Method::GET,
+                Method::POST,
+                Method::PATCH,
+                Method::DELETE,
+                Method::HEAD,
+            ])
             .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
             .max_age(Duration::from_secs(60 * 60 * 24 * 7))
     } else {
         CorsLayer::new()
             .allow_origin(AllowOrigin::any())
-            .allow_methods([Method::GET])
+            .allow_methods([Method::GET, Method::HEAD])
             .allow_headers([header::ACCEPT, header::CONTENT_TYPE])
             .max_age(Duration::from_secs(60 * 60 * 24))
     };
 
     let cors_protected = CorsLayer::new()
         .allow_origin(AllowOrigin::any())
-        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PATCH,
+            Method::DELETE,
+            Method::HEAD,
+        ])
         .allow_headers([header::ACCEPT, header::CONTENT_TYPE, header::AUTHORIZATION])
         .max_age(Duration::from_secs(60 * 60 * 24 * 7));
 
-    let serve_public = ServeDir::new(root).not_found_service(service_fn(render_404));
-
     let user_routes = Router::new()
-        .route_with_tsr("/user/{username}", get(public::get_user))
-        .route_with_tsr("/user/{username}/next", get(public::get_user_next))
-        .route_with_tsr("/user/{username}/prev", get(public::get_user_prev))
-        .route_with_tsr("/user/{username}/random", get(public::get_user_random))
+        .route_with_tsr("/get/user/{username}", get(public::get_user))
+        .route_with_tsr("/get/user/{username}/next", get(public::get_user_next))
+        .route_with_tsr("/get/user/{username}/prev", get(public::get_user_prev))
+        .route_with_tsr("/get/user/{username}/random", get(public::get_user_random))
         .layer(cors_public.clone());
 
     let protected_routes = Router::new()
         .route_with_tsr(
-            "/api/get/user/by-discord/{discord_id}",
+            "/get/user/by-discord/{discord_id}",
             get(petring_protected::get_user_by_discord_id),
         )
         .route_with_tsr(
-            "/api/get/user/by-discord/{discord_id}/unverified",
+            "/get/user/by-discord/{discord_id}/unverified",
             get(petring_protected::get_user_by_discord_id_unverified),
         )
         .route_with_tsr(
-            "/api/delete/user/by-discord/{discord_id}",
+            "/delete/user/by-discord/{discord_id}",
             delete(petring_protected::delete_user_by_discord_id),
         )
         .route_with_tsr(
-            "/api/delete/user/{username}",
+            "/delete/user/{username}",
             delete(petring_protected::delete_user_by_username),
         )
         .route_with_tsr(
-            "/api/delete/users",
+            "/delete/users",
             delete(petring_protected::bulk_delete_users),
         )
         .route_with_tsr(
-            "/api/patch/user/edit",
+            "/patch/user/edit",
             patch(petring_protected::patch_user_edit),
         )
         .route_with_tsr(
-            "/api/patch/user/verify/{discord_user_id}",
+            "/patch/user/verify/{discord_user_id}",
             patch(petring_protected::patch_user_verify),
         )
         .route_with_tsr(
-            "/api/post/user/submit",
+            "/post/user/submit",
             post(petring_protected::post_user_submit),
         )
-        .route_with_tsr("/api/post/ad/submit", post(petads::post_ad_submit))
+        .route_with_tsr("/post/ad/submit", post(petads::post_ad_submit))
         .route_with_tsr(
-            "/api/patch/ad/verify/{discord_user_id}",
+            "/patch/ad/verify/{discord_user_id}",
             patch(petads::patch_ad_verify),
         )
-        .route_with_tsr("/api/patch/ad/edit", patch(petads::patch_ad_edit))
+        .route_with_tsr("/patch/ad/edit", patch(petads::patch_ad_edit))
         .route_with_tsr(
-            "/api/delete/ad/by-discord/{discord_id}",
+            "/delete/ad/by-discord/{discord_id}",
             delete(petads::delete_ad_by_discord_id),
         )
         .route_with_tsr(
-            "/api/delete/ad/{username}",
+            "/delete/ad/{username}",
             delete(petads::delete_ad_by_username),
         )
-        .route_with_tsr("/api/delete/ads", delete(petads::bulk_delete_ads))
+        .route_with_tsr("/delete/ads", delete(petads::bulk_delete_ads))
         .route_layer(from_fn_with_state(state.clone(), protected::require_auth))
         .layer(cors_protected.clone());
 
@@ -207,16 +211,16 @@ async fn main() -> IoResult<()> {
         .layer(cors_protected);
 
     let api_routes = Router::new()
-        .route_with_tsr("/api", get(public::get_public_api_index))
-        .route_with_tsr("/api/get/server-info", get(public::get_server_info))
-        .route_with_tsr("/api/get/uptime", get(public::get_uptime))
-        .route_with_tsr("/api/get/users", get(public::get_all_users))
-        .route_with_tsr("/api/get/users/random", get(public::get_random_user))
-        .route_with_tsr("/api/get/random-ad", get(public::get_random_ad))
+        .route("/", get(public::get_public_api_index))
+        .route_with_tsr("/get/server-info", get(public::get_server_info))
+        .route_with_tsr("/get/uptime", get(public::get_uptime))
+        .route_with_tsr("/get/users", get(public::get_all_users))
+        .route_with_tsr("/get/users/random", get(public::get_random_user))
+        .route_with_tsr("/get/random-ad", get(public::get_random_ad))
         .layer(cors_public.clone());
 
     let app = Router::new()
-        .fallback_service(serve_public)
+        .fallback_service(service_fn(render_404))
         .layer(
             ServiceBuilder::new()
                 .layer(SetResponseHeaderLayer::if_not_present(
@@ -259,7 +263,7 @@ async fn main() -> IoResult<()> {
     // body streams, don't remove it!
     //
 
-    let ip = string_to_ip(&config.network().ip).unwrap_or_else(|e| panic!("invalid ip: {e}"));
+    let ip = string_to_ip(&config.network().ip).unwrap_or_else(|e| panic!("Invalid ip: {e}"));
     let addr = SocketAddr::from((ip, config.network().port));
 
     if config.tls().enable {
@@ -267,20 +271,20 @@ async fn main() -> IoResult<()> {
             .tls()
             .cert
             .clone()
-            .unwrap_or_else(|| panic!("invalid cert path"));
+            .unwrap_or_else(|| panic!("Invalid cert path"));
         let key_path = config
             .tls()
             .key
             .clone()
-            .unwrap_or_else(|| panic!("invalid key path"));
+            .unwrap_or_else(|| panic!("Invalid key path"));
 
         let tls_config = RustlsConfig::from_pem_file(cert_path, key_path).await?;
-        info!("serving https on {addr}");
+        info!("Serving HTTPS on {addr}");
         axum_server::bind_rustls(addr, tls_config)
             .serve(app.into_make_service_with_connect_info::<SocketAddr>())
             .await
     } else {
-        info!("serving http on {addr}");
+        info!("Serving HTTP on {addr}");
         axum_server::bind(addr)
             .serve(app.into_make_service_with_connect_info::<SocketAddr>())
             .await
