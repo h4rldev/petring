@@ -28,6 +28,7 @@ git clone https://github.com/h4rldev/petring.git ./buf
 
 echo "Getting relevant files"
 mv -t ./ ./buf/migration ./buf/frontend ./buf/petring-api.toml ./buf/petring-web.toml ./buf/docker-compose.yml ./buf/docker-compose.override.yml
+mv -t ./.env ./buf/.env.example
 if ${NO_JUST} == false; then
 	mv ./buf/justfile ./
 fi
@@ -38,7 +39,6 @@ rm -fr ./buf
 echo "Generating empty database"
 sqlite3 petring.db "VACUUM;"
 
-echo "DATABASE_URL=sqlite://petring.db" > .env
 echo "Running migrations"
 if ${NO_JUST}; then
 	pushd ./migration/ >/dev/null
@@ -52,5 +52,6 @@ fi
 
 echo "Petring is now ready to be configured"
 echo "Check out the docker-compose files, petring-api.toml and petring-web.toml"
+echo "IMPORTANT: Don't forget about your .env file, This script has pre-copied the .env.example file to .env for you."
 echo "Cheers!"
 exit 0
