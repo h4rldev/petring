@@ -1,3 +1,5 @@
+set quiet := true
+
 default:
     just --list
 
@@ -7,8 +9,15 @@ default:
 @run-dev +args="":
     cargo run -- {{ args }}
 
-@build:
-    cargo build --release
+build binary="both":
+    #!/usr/bin/env bash
+    if [ "{{ binary }}" == "both" ]; then
+    		just build petring-api
+    		just build petring-web
+    else
+    		echo "Building {{ binary }}"
+    		cargo build --release --bin {{ binary }}
+    fi
 
 @build-dev:
     cargo build
