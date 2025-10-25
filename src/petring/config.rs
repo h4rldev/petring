@@ -8,11 +8,11 @@ use super::{IoResult, PetRingResult};
 pub struct Level(pub TracingLevel);
 
 impl Level {
-    pub const TRACE: tracing::Level = tracing::Level::TRACE;
-    pub const DEBUG: tracing::Level = tracing::Level::DEBUG;
-    pub const INFO: tracing::Level = tracing::Level::INFO;
-    pub const WARN: tracing::Level = tracing::Level::WARN;
-    pub const ERROR: tracing::Level = tracing::Level::ERROR;
+    pub const TRACE: Self = Self(tracing::Level::TRACE);
+    pub const DEBUG: Self = Self(tracing::Level::DEBUG);
+    pub const INFO: Self = Self(tracing::Level::INFO);
+    pub const WARN: Self = Self(tracing::Level::WARN);
+    pub const ERROR: Self = Self(tracing::Level::ERROR);
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -26,7 +26,6 @@ pub struct Config {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SiteConfig {
     pub root: Option<PathBuf>,
-    pub api_base_url: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -51,7 +50,7 @@ pub struct LoggingConfig {
 
 impl fmt::Display for Level {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.0 {
+        match *self {
             Self::TRACE => write!(f, "TRACE"),
             Self::DEBUG => write!(f, "DEBUG"),
             Self::INFO => write!(f, "INFO"),
@@ -64,19 +63,13 @@ impl fmt::Display for Level {
 impl From<&str> for Level {
     fn from(s: &str) -> Self {
         match s {
-            "TRACE" => Self(Self::TRACE),
-            "DEBUG" => Self(Self::DEBUG),
-            "INFO" => Self(Self::INFO),
-            "WARN" => Self(Self::WARN),
-            "ERROR" => Self(Self::ERROR),
+            "TRACE" => Self::TRACE,
+            "DEBUG" => Self::DEBUG,
+            "INFO" => Self::INFO,
+            "WARN" => Self::WARN,
+            "ERROR" => Self::ERROR,
             _ => panic!("invalid level"),
         }
-    }
-}
-
-impl From<tracing::Level> for Level {
-    fn from(level: tracing::Level) -> Self {
-        Self(level)
     }
 }
 
@@ -86,15 +79,9 @@ impl From<String> for Level {
     }
 }
 
-impl From<Level> for tracing::Level {
-    fn from(level: Level) -> Self {
-        level.0
-    }
-}
-
 impl Config {
     pub fn load() -> PetRingResult<Self> {
-        let config = match fs::read_to_string("petring-web.toml") {
+        let config = match fs::read_to_string("petring.toml") {
             Ok(config) => config,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
@@ -106,6 +93,21 @@ impl Config {
             }
         };
 
+        let config: Config = toml::from_str(&config)?;
+
+        Ok(config)
+    }
+
+    pub fn load_from_file(path: &PathBuf) -> PetRingResult<Self> {
+        let config = match fs::read_to_string(path) {
+            Ok(config) => config,
+            Err(e) => {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    return Config::load();
+                }
+                return Err(e.into());
+            }
+        };
         let config: Config = toml::from_str(&config)?;
 
         Ok(config)
@@ -131,7 +133,6 @@ impl Config {
         Self {
             site: SiteConfig {
                 root: Some(PathBuf::from("static")),
-                api_base_url: Some(String::from("http://localhost:8081")),
             },
             tls: TlsConfig {
                 cert: None,
@@ -151,12 +152,11 @@ impl Config {
     }
 
     pub fn write(&self) -> IoResult<()> {
-        let config = match toml::to_string_pretty(self) {
-            Ok(config) => config,
-            Err(e) => panic!("Couldn't serialize config: {e}"),
-        };
+        let config = toml::to_string_pretty(self)
+            .map_err(|e| panic!("Couldn't serialize config: {e}"))
+            .unwrap();
+        fs::write("creme-brulee.toml", config)?;
 
-        fs::write("petring-web.toml", config)?;
         Ok(())
     }
 }
