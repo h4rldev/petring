@@ -2,6 +2,7 @@
 
 > [!WARNING]
 > This project is in an early ALPHA and is not ready for any serious usecase
+>
 > Bugs will exist, and code will be messy; Keep that in mind.
 
 This is a webring and navlink ad system for the Jess Museum Discord server.
