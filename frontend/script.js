@@ -8,8 +8,6 @@ const test_json = {
   ],
 };
 
-let api_url = "http://localhost:8081";
-
 // allows mouse listeners to all links so animations stop when someone hovers over a link
 function meow() {
   const wrapper = document.getElementById("spin-item-wrapper"); // Note the period (.)
@@ -40,6 +38,10 @@ function meow() {
   });
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  main();
+});
+
 function genDemoLinks() {
   test_json.users.forEach((user) => {
     makeLink(user.username, user.url);
@@ -48,49 +50,26 @@ function genDemoLinks() {
   meow();
 }
 
-async function getUptimes() {
-  let api_uptime_element = document.getElementById("api-uptime");
-  let api_system_uptime_element = document.getElementById("api-system-uptime");
-  let web_uptime_element = document.getElementById("web-uptime");
-  let web_system_uptime_element = document.getElementById("web-system-uptime");
+// TODO: function name
+async function meowmeow() {
+  server_uptime_element = document.getElementById("server-uptime");
+  const server_info = await fetch("/api/get/uptime");
 
-  fetch(`${api_url}/get/uptime`)
-    .then((response) => response.json())
-    .then((data) => {
-      let api_data = data;
-      api_uptime_element.innerText = `API: ${api_data.app_uptime}`;
-      api_system_uptime_element.innerText = `API System: ${api_data.system_uptime}`;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  let data = await server_info.json();
 
-  fetch("/api/get/uptime")
-    .then((response) => response.json())
-    .then((data) => {
-      let web_data = data;
-      web_uptime_element.innerText = `Web: ${web_data.app_uptime}`;
-      web_system_uptime_element.innerText = `Web System: ${web_data.system_uptime}`;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  server_uptime_element.innerText = `App uptime: ${data.app_uptime}, System uptime: ${data.system_uptime}`;
 }
 
 async function genApiLinks() {
-  fetch(`${api_url}/get/users`)
-    .then((response) => response.json())
-    .then((data) => {
-      let users = data;
-      users.users.forEach((user) => {
-        makeLink(user.username, user.url);
-      });
-      calculateRotations();
-      meow();
-    })
-    .catch((error) => {
-      console.error(error);
+  const response = await fetch("/api/get/users");
+  // error handling ?.. whats that? (tbh if the backend isnt up the frontend wouldnt be served so like :P)
+  response.json().then((data) => {
+    data.users.forEach((user) => {
+      makeLink(user.username, user.url);
     });
+  });
+  calculateRotations();
+  meow();
 }
 
 // creates new spin-item element to be added to spin-items-wrapper
@@ -133,26 +112,7 @@ function calculateRotations() {
   void wrapper.offsetWidth; // broswer reflow (its for animations)
 }
 
-function setPetAdsEmbedExample() {
-  const embed_example_element = document.getElementById("petad-embed-example");
-  let url = window.location.href;
-
-  embed_example_element.innerText = `<iframe src="${url}petads" height="300" allowtransparency="true" frameborder="0"></iframe>`;
-}
-
-function copyButton() {
-  const copy_button = document.getElementById("copy-button");
-  const embed_example_element = document.getElementById("petad-embed-example");
-
-  copy_button.addEventListener("click", async function () {
-    await navigator.clipboard.writeText(embed_example_element.innerText);
-    copy_button.innerText = "Copied!";
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    copy_button.innerText = "Copy";
-  });
-}
-
-async function main() {
+function main() {
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
       e.preventDefault();
@@ -166,18 +126,7 @@ async function main() {
   if (location.protocol == "file:") {
     genDemoLinks();
   } else {
-    const api_url_fetch = await fetch("/api/get/api-url");
-    let response = await api_url_fetch.json();
-    api_url = response.api_url;
-
-    setPetAdsEmbedExample();
     genApiLinks();
-    getUptimes();
+    meowmeow();
   }
-
-  copyButton();
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  main();
-});

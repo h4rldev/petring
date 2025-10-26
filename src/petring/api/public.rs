@@ -34,7 +34,7 @@ pub async fn get_public_api_index() -> impl IntoResponse {
 
     let wrap_endpoints_with_hyperlinks = current_endpoints
         .iter()
-        .map(|endpoint| format!("<li><a href=\"{endpoint}\">{endpoint}</a></li>"))
+        .map(|endpoint| format!("<li><a href=\"/api{endpoint}\">/api{endpoint}</a></li>"))
         .collect::<Vec<String>>();
 
     (

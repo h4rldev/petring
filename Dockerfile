@@ -4,9 +4,7 @@ RUN cargo install cargo-chef
 WORKDIR /app
 
 FROM chef AS planner
-
 COPY . .
-
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -21,17 +19,17 @@ RUN apt-get update && apt-get install -y \
 		sqlite3
 
 COPY --from=planner /app/recipe.json recipe.json
-
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
 
-RUN cargo build --release
+RUN just build
 
 FROM debian:trixie-slim AS runtime
 
 WORKDIR /app
 
-COPY --from=builder /app/target/release/petring-api ./petring-api
+COPY ./frontend/ ./frontend
+COPY --from=builder /app/target/release/petring ./petring
 
-ENTRYPOINT ["./petring-api"]
+ENTRYPOINT ["./petring"]

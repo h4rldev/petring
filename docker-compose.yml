@@ -1,49 +1,41 @@
 # You will need a .env for this docker-compose file
 
 # Deployment :
+# uncomment image var in petring
+# comment out build: . in petring
 # uncomment the entire watchtower section
 # uncomment traefik if needed
 
 services:
-  petring-web:
-    container_name: petring-web
-    build: ./web # <- Comment this out and uncomment the thing below if you're not cloning the repo
-    # image: ghcr.io/h4rldev/petring-web:latest
-    labels:
-      com.centurylinklabs.watchtower.scope: petring-web
-
-    ports:
-      - 8080:8080
-
-    volumes:
-      - ./petring-web.toml:/app/petring-web.toml
-      - ./frontend/:/app/frontend/
-
-  petring-api:
-    container_name: petring-api
-    build: ./api # <- Comment this out and uncomment the thing below if you're not cloning the repo
-    # image: ghcr.io/h4rldev/petring-api:latest
+  petring:
+    container_name: petring
+    build: .
+    # image: ghcr.io/h4rldev/petring-backend:latest
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
       - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
       - BOT_TOKEN=${BOT_TOKEN}
-    labels:
-      com.centurylinklabs.watchtower.scope: petring-api
+    labels: [ "com.centurylinklabs.watchtower.scope=petring" ]
 
     ports:
-      - 8081:8081
+      - 8080:8080
+
+    # networks: # For use with traefik
+    #   - proxy
 
     volumes:
-      - ./petring-api.toml:/app/petring-api.toml
       - ./petring.db:/app/petring.db
+      - ./petring.toml:/app/petring.toml
+      - ./frontend/:/app/frontend/
+#   watchtower: # For auto-updates
+#     image: containrrr/watchtower
+#     container_name: watchtower_petring
+#     volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+#     command: --interval 30 --scope petring
+#     labels: [ "com.centurylinklabs.watchtower.scope=petring" ]
 
-  #   watchtower: # For auto-updates
-  #     image: containrrr/watchtower
-  #     container_name: watchtower_petring
-  #     volumes:
-  #       - "/var/run/docker.sock:/var/run/docker.sock"
-  #     command: --interval 30 --scope petring-web --scope petring-api
-  #     labels:
-  #       com.centurylinklabs.watchtower.scope: petring-web
-  #       com.centurylinklabs.watchtower.scope: petring-api
+# networks: # For use with traefik
+#   proxy:
+#     name: "proxy"
+#     external: true

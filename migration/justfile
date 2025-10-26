@@ -1,13 +1,7 @@
 default:
     just --list
 
-@migrations +args="":
-    mv ../petring.db .
+@migrations db="petring.db" +args="":
+    mv ../{{ db }} .
     cargo run --release -- {{ args }}
-    mv petring.db ../
-
-@prepare-bin:
-    cargo chef --prepare --recipe-path recipe.json
-
-@cook-bin:
-    cargo chef cook --release --recipe-path recipe.json
+    mv {{ db }} ../

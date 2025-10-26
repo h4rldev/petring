@@ -1,26 +1,17 @@
-set quiet := true
-
 default:
     just --list
 
-@run binary="petring-web" +args="":
-    cargo run --release --bin {{ binary }} -- {{ args }}
+@run +args="":
+    cargo run --release -- {{args}}
 
 @run-dev +args="":
-    cargo run -- {{ args }}
+    cargo run -- {{args}}
 
-build binary="both":
-    #!/usr/bin/env bash
-    if [ "{{ binary }}" == "both" ]; then
-    		just build petring-api
-    		just build petring-web
-    else
-    		echo "Building {{ binary }}"
-    		cargo build --release --bin {{ binary }}
-    fi
+@build:
+    cargo build --release
 
 @build-dev:
     cargo build
 
 @migrations +args="":
-    just --justfile api/migration/justfile migrations {{ args }}
+    just --justfile migration/justfile migrations {{args}}
