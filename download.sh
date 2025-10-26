@@ -28,9 +28,9 @@ git clone https://github.com/h4rldev/petring.git ./buf
 
 echo "Getting relevant files"
 mv -t ./ ./buf/migration ./buf/frontend ./buf/petring-api.toml ./buf/petring-web.toml ./buf/docker-compose.yml ./buf/docker-compose.override.yml
-mv -t ./.env ./buf/.env.example
-if ${NO_JUST} == false; then
-	mv ./buf/justfile ./
+mv ./buf/.env.example ./.env
+if [[ ${NO_JUST} == false ]]; then
+	mv ./buf/justfile .
 fi
 
 echo "Removing cloned repo"
@@ -40,7 +40,7 @@ echo "Generating empty database"
 sqlite3 petring.db "VACUUM;"
 
 echo "Running migrations"
-if ${NO_JUST}; then
+if [[ ${NO_JUST} == true ]]; then
 	pushd ./migration/ >/dev/null
 	mv ../petring.db .
 	cargo run --release -- up

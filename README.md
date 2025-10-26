@@ -23,13 +23,13 @@ This is a webring and navlink ad system for the Jess Museum Discord server.
 - Run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/h4rldev/petring/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | bash
 ```
 
 - Or run:
 
 ```bash
-wget -O - https://raw.githubusercontent.com/h4rldev/petring/main/install.sh | bash
+wget -O - https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | bash
 ```
 
 - Check out [Collar](https://github.com/h4rldev/collar) to actually use PetRing.

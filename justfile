@@ -23,4 +23,4 @@ build binary="both":
     cargo build
 
 @migrations +args="":
-    just --justfile api/migration/justfile migrations {{ args }}
+    just --justfile migration/justfile migrations {{ args }}
