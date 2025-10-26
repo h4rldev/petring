@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
@@ -26,11 +26,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image for petring-api
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./api
           push: true
-          tags: ghcr.io/h4rldev/petring-backend:latest
+          tags: ghcr.io/h4rldev/petring-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Docker image for petring-web
+        uses: docker/build-push-action@v5
+        with:
+          context: ./web
+          push: true
+          tags: ghcr.io/h4rldev/petring-web:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,0 +1,31 @@
+services:
+  petring-web:
+    networks:
+      - proxy # Needs to match the other mentions of network
+
+    labels:
+      traefik.enable: true
+      traefik.docker.network: proxy
+
+      traefik.http.routers.petring-web.rule: Host(``) # Set hostname for webserver here
+      traefik.http.routers.petring-web.tls: true # We recommend using traefik's builtin support for acme cert resolvers.
+      traefik.http.routers.petring-web.tls.certresolver: letsencrypt
+      traefik.http.services.petring-web.loadbalancer.server.port: 8080
+
+  petring-api:
+    networks:
+      - proxy # Needs to match the other mentions of network
+
+    labels:
+      traefik.enable: true
+      traefik.docker.network: proxy
+
+      traefik.http.routers.petring-api.rule: Host(``) # Set hostname for api here
+      traefik.http.routers.petring-api.tls: true # We recommend using traefik's builtin support for acme cert resolvers.
+      traefik.http.routers.petring-api.tls.certresolver: letsencrypt
+      traefik.http.services.petring-api.loadbalancer.server.port: 8081
+
+  networks: # For use with traefik
+  proxy:
+    name: "proxy" # This and traefik.docker.network must match
+    external: true

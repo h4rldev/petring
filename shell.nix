@@ -7,6 +7,7 @@ with pkgs;
       rustup
       pkg-config
       sqlite
+      just
       openssl
 
       # linters and formatters

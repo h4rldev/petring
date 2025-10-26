@@ -31,19 +31,24 @@
 				<li class="nav-element">
 					<a href="#Credits">Credits</a>
 				</li>
+				<li class="nav-element">
+					<a href="/api">Web API</a>
+				</li>
 			</ul>
-			<div style="margin-left: auto;"class="nav-element">
-				<a class="icon" href="https://github.com/h4rldev/petring">
-					<img src="./assets/github.svg"></img>
-				</a>
-			</div>
-			<div class="nav-element nav-ad">
-				<a href="https://ko-fi.com/h4rl3h">
-				<div class="nav-ad-inner">
-					<p>Support server costs and development here!</p>
-					<img src="./assets/kofi.svg"></img>
+			<div class="right-buttons">
+				<div class="nav-element source-code">
+					<a class="icon" href="https://github.com/h4rldev/petring">
+						<img src="./assets/github.svg"></img>
+					</a>
 				</div>
-				</a>
+				<div class="nav-element nav-ad">
+					<a href="https://ko-fi.com/h4rl3h">
+					<div class="nav-ad-inner">
+						<p>Support server costs and development here!</p>
+						<img src="./assets/kofi.svg"></img>
+					</div>
+					</a>
+				</div>
 			</div>
 		</nav>
 	</header>
@@ -51,7 +56,7 @@
 		<section class="spin-content">
 			<div class="spin-parent">
 				<div class="spin-center">
-					meow
+					<img src="./assets/petring-big-but-trans.png">
 				</div>
 				<div class="spin-items-wrapper" id="spin-item-wrapper">
 				</div>
@@ -59,7 +64,7 @@
 		</section>
 		<!-- end of spin -->
 		<section class="content-fade-in" id="Joining">
-			<a href="#Joining">scroll</a>
+			<a href="#Joining">Press me to scroll!</a>
 		</section>
 		<section class="info-block">
 			<div class="info-block-inner">
@@ -79,17 +84,30 @@
 			<div class="info-block-inner" id="PetAds">
 				<h1>What is PetAds?</h1>
 				<hr>
-				<p class="petad-desc">PetAds is also a service specifically for petring members, allowing you to submit an image
+				<p class="petad-desc">PetAds is a service specifically for petring members, allowing you to submit an image
 					of your choosing
-					and have it appear on a widget you can embed in your website, and anyone can embed it, advertising your
+					and have it appear on a widget you can embed in your website, anyone can embed it, advertising your
 					website to the greater internet :3</p>
+				<iframe src="/petads" height="300" allowtransparency="true" frameborder="0"></iframe>
+			</div>
+			<div class="info-block-inner" id="HowDoIUsePetAds">
+				<h1>How do I use PetAds?</h1>
+				<hr>
+				<p class="petad-desc">To use PetAds, you'll need to have a <a href="https://github.com/h4rldev/petring">PetRing</a> account, and then you can submit an image of your choosing to be displayed on the PetAds widget. You can then embed the widget on your website, with this snippet:</p>
+				<div class="petad-embed-example">
+					<code id="petad-embed-example">
+					</code>
+					<button class="copy-button" id="copy-button">Copy</button>
+				</div>
 			</div>
 			<div class="info-block-inner" id="Discord">
 				<h1>Discord</h1>
 				<hr>
-				<iframe src="https://discord.com/widget?id=1305026685397106779&amp;theme=dark" width="350" height="500"
-					allowtransparency="true" frameborder="0"
-					sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+				<div class="discord-widget">
+					<iframe src="https://discord.com/widget?id=1305026685397106779&amp;theme=dark" height="500"
+						allowtransparency="true" frameborder="0"
+						sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+				</div>
 			</div>
 			<div class="info-block-inner">
 				<h1 id="Credits">Credits</h1>
@@ -114,8 +132,15 @@
 		<div class="footer-inner">
 			<ul>
 				<li>Made with human paws &#x1F43E; not robots</li>
-				<li>Server uptime: <span id="server-uptime">loading...</span></li>
-				<li>See server info <a href="/api/get/server-info" target="_blank">here</a></li>
+				<li class="uptimes">Uptimes:
+					<ul>
+						<li><span id="web-uptime">loading...</span></li>
+						<li><span id="api-uptime">loading...</span></li>
+						<li><span id="web-system-uptime">loading...</span></li>
+						<li><span id="api-system-uptime">loading...</span></li>
+					</ul>
+				</li>
+				<li>See server info: <a href="/api/get/server-info" target="_blank">here</a></li>
 			</ul>
 		</div>
 	</footer>
