@@ -13,12 +13,13 @@ FROM chef AS builder
 
 WORKDIR /app
 
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y \
     just \
     libssl-dev \
     pkg-config \
     gcc \
-		sqlite3
+    sqlite3 --no-install-recommends
 
 COPY --from=planner /app/recipe.json recipe.json
 

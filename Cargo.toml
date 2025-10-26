@@ -1,7 +1,3 @@
 [workspace]
 resolver = "3"
-members = [
-	"api",
-	"web",
-	"migration",
-]
+members = ["api", "web", "migration"]

@@ -12,10 +12,11 @@ FROM chef AS builder
 
 WORKDIR /app
 
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
-    gcc
+    gcc --no-install-recommends
 
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json

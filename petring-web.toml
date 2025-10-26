@@ -1,6 +1,6 @@
 [site]
 root = "frontend"
-api_base_url = "http://localhost:8081"
+api_base_url = "https://api.webring.pet"
 
 [tls]
 enable = false

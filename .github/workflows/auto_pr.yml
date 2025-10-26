@@ -21,9 +21,9 @@ jobs:
           | length')
 
           if [ "$OPEN_PRS" -gt 0 ]; then
-            echo "has_open_pr=true" >> $GITHUB_OUTPUT
+            echo "has_open_pr=true" >> "$GITHUB_OUTPUT"
           else
-            echo "has_open_pr=false" >> $GITHUB_OUTPUT
+            echo "has_open_pr=false" >> "$GITHUB_OUTPUT"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,9 +34,11 @@ jobs:
         run: |
           COMMIT_MESSAGES=$(git log --pretty=format:"- %s" origin/main..origin/dev)
           DELIMITER=$(openssl rand -hex 8)
-          echo "COMMIT_MESSAGES<<${DELIMITER}" >> $GITHUB_OUTPUT
-          echo "$COMMIT_MESSAGES" >> $GITHUB_OUTPUT
-          echo "${DELIMITER}" >> $GITHUB_OUTPUT
+          {
+            echo "COMMIT_MESSAGES<<${DELIMITER}"
+            echo "$COMMIT_MESSAGES"
+            echo "${DELIMITER}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Open PR
         if: steps.prcheck.outputs.has_open_pr == 'false'
@@ -61,7 +63,7 @@ jobs:
         run: |
           PR_NUMBER=$(gh pr list --head dev --state open --json number --limit 1 | jq '.[0].number')
           COMMIT_MESSAGES=$(git log --pretty=format:"- %s" origin/main..origin/dev)
-          gh pr edit $PR_NUMBER \
+          gh pr edit "$PR_NUMBER" \
             --title "auto: Pull dev into main" \
             --body \
           "# Changelog

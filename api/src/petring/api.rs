@@ -1,5 +1,4 @@
 use super::{PetRingResult, database, jwt, state};
-
 use axum::{
     Json,
     body::Body,
@@ -7,8 +6,6 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
-#[allow(unused_imports)]
-use tracing::{debug, error, info};
 
 pub mod protected;
 pub mod public;

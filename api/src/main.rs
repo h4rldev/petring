@@ -1,4 +1,3 @@
-use askama::Template;
 use axum::{
     Router,
     body::Body,
@@ -8,16 +7,17 @@ use axum::{
         header::{self, CACHE_CONTROL, CONTENT_SECURITY_POLICY},
     },
     middleware::from_fn_with_state,
-    response::{Html, IntoResponse, Response as AxumResponse},
     routing::{delete, get, patch, post},
 };
 use axum_extra::routing::RouterExt;
 use petring::{
     IoResult,
+    api::petring_api_err,
     api::{
         protected::{self, petads, petring as petring_protected},
         public,
     },
+    config::Config,
     config::{Level, string_to_ip},
     state::AppState,
 };
@@ -38,16 +38,13 @@ use tower_http::{
     set_header::SetResponseHeaderLayer,
     trace::{DefaultMakeSpan, TraceLayer},
 };
-#[allow(unused_imports)]
-use tracing::{debug, error, info, trace, warn};
+use tracing::info;
 use tracing_subscriber::{
     field::MakeExt,
     fmt::{Subscriber, format::debug_fn},
 };
 
 use axum_server::tls_rustls::RustlsConfig;
-
-use crate::petring::config::Config;
 
 mod petring;
 
@@ -58,35 +55,11 @@ static APP_START: once_cell::sync::Lazy<u64> = once_cell::sync::Lazy::new(|| {
         .as_secs()
 });
 
-#[derive(Template)]
-#[template(path = "404.html")]
-struct NotFoundTemplate {
-    path: String,
-}
-
-pub struct HtmlTemplate<T>(T);
-
-impl<T> IntoResponse for HtmlTemplate<T>
-where
-    T: Template,
-{
-    fn into_response(self) -> AxumResponse {
-        match self.0.render() {
-            Ok(html) => Html(html).into_response(),
-            Err(err) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to render template. Error: {err}"),
-            )
-                .into_response(),
-        }
-    }
-}
-
 pub async fn render_404(_req: Request) -> Result<Response<Body>, Infallible> {
     let url = _req.uri().to_string();
+    let message = format!("The requested resource at {url} could not be found.");
 
-    let not_found = NotFoundTemplate { path: url };
-    Ok(HtmlTemplate(not_found).into_response())
+    Ok(petring_api_err(StatusCode::NOT_FOUND, &message))
 }
 
 #[tokio::main]
