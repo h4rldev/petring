@@ -4,13 +4,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>petring: 404 at {{ path }}</title>
-  <link href="css/style.css" rel="stylesheet">
+		<title>PetRing &amp PetAds: 404 at {{ path }}</title>
+  <link href="style.css" rel="stylesheet">
+		<link rel="icon" href="assets/petring-big-but-trans.png">
+	<script src="script404.js"></script>
 </head>
 
 <body>
-  <h1>404 Not Found</h1>
-  <p>The requested resource at {{ path }} could not be found. meow</p>
+	<!-- paws at you -->
+	<header class="header-meow">
+		<nav class="header-inner">
+			<div class="nav-element logo">
+				<a href="/">PetRing & PetAds</a>
+				<img src="./assets/petring-big-but-trans.png">
+			</div>
+			<ul class="header-element-list">
+				<li class="nav-element">
+					<a href="#Discord">Discord</a>
+				</li>
+				<li class="nav-element">
+					<a href="#Joining">How do I join?</a>
+				</li>
+				<li class="nav-element">
+					<a href="#PetAds">What is PetAds?</a>
+				</li>
+				<li class="nav-element">
+					<a href="#Credits">Credits</a>
+				</li>
+				<li class="nav-element">
+					<a href="/api">Web API</a>
+				</li>
+			</ul>
+			<div class="right-buttons">
+				<div class="nav-element source-code">
+					<a class="icon" href="https://github.com/h4rldev/petring">
+						<img src="./assets/github.svg"></img>
+					</a>
+				</div>
+				<div class="nav-element nav-ad">
+					<a href="https://ko-fi.com/h4rl3h">
+					<div class="nav-ad-inner">
+						<p>Support server costs and development here!</p>
+						<img src="./assets/kofi.svg"></img>
+					</div>
+					</a>
+				</div>
+			</div>
+		</nav>
+	</header>
+	<main class="div-meow">
+		<section>
+  <h1 style="font-family: sans-serif">404 Not Found</h1>
+  <p style="font-family: sans-serif">The requested resource at {{ path }} could not be found. meow</p>
+	</section>
+	<section class="content-fade-in" id="Joining">
+		</section>
+	</main>
+			<footer>
+		<div class="footer-inner">
+			<ul>
+				<li>Made with human paws &#x1F43E; not robots</li>
+				<li class="uptimes">Uptimes:
+					<ul>
+						<li><span id="web-uptime">loading...</span></li>
+						<li><span id="api-uptime">loading...</span></li>
+						<li><span id="web-system-uptime">loading...</span></li>
+						<li><span id="api-system-uptime">loading...</span></li>
+					</ul>
+				</li>
+				<li>See server info: <a href="/api/get/server-info" target="_blank">here</a></li>
+			</ul>
+		</div>
+	</footer>
 </body>
-
 </html>

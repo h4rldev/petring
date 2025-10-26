@@ -7,9 +7,31 @@
 
 This is a webring and navlink ad system for the Jess Museum Discord server.
 
+## Table of Contents
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [How to install](#how-to-install)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+- [How to build](#how-to-build)
+  - [Prerequisites](#prerequisites)
+  - [Prebuild](#prebuild)
+  - [Finally](#finally)
+  - [Docker](#docker)
+- [Contributing](#contributing)
+  - [For people without write access](#for-people-without-write-access)
+  - [For people with write access](#for-people-with-write-access)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## How to install
 
 ### Requirements
+
+<!-- alex ignore just -->
 
 - Just (Optional)
 - A stable Rust toolchain
@@ -38,6 +60,8 @@ wget -O - https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | b
 
 ### Prerequisites
 
+<!-- alex ignore just -->
+
 - Just (Optional)
 - A stable Rust toolchain
   (preferrably stable-x86_64-unknown-linux-gnu, but musl can maybe work too)
@@ -54,14 +78,15 @@ sqlite3 petring.db "VACUUM;"
 ```
 
 - Setup your `.env` file according to the `.env.example` file
-
 - Then run the migrations
-
+<!-- alex ignore just -->
 - With just:
 
 ```bash
 just migrations petring.db up
 ```
+
+<!-- alex ignore just -->
 
 - Without just:
 
@@ -75,11 +100,15 @@ popd >/dev/null
 
 ### Finally
 
+<!-- alex ignore just -->
+
 - With just:
 
 ```bash
 just build
 ```
+
+<!-- alex ignore just -->
 
 - Without just:
 
@@ -113,6 +142,8 @@ cargo build --release --bin petring-web
 - Submit a PR describing what you've done
 
 ### For people with write access
+
+<!-- alex ignore just -->
 
 - No need to fork the repo, just clone it
 - And then follow the same instructions as above

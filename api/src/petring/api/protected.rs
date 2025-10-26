@@ -1,13 +1,9 @@
-pub mod petads;
-pub mod petring;
-
 use super::{
     AdEditRequest, AdResponse, AdSubmission, BulkAdDeleteRequest, BulkAdDeleteResponse,
     BulkUserDeleteRequest, BulkUserDeleteResponse, EditUserResponse, UserEdit, UserResponse,
     UserSubmission, database, jwt, petring_api_err, petring_api_response,
     state::{self, AppState},
 };
-
 use axum::{
     Json,
     body::Body,
@@ -21,6 +17,9 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use tracing::info;
+
+pub mod petads;
+pub mod petring;
 
 #[derive(Deserialize)]
 pub struct BotSetupRequest {

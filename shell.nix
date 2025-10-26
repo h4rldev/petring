@@ -13,6 +13,19 @@ with pkgs;
       # linters and formatters
       markdownlint-cli
       prettierd
-      alejandra
+      biome
+      nodePackages_latest.alex
+      doctoc
+      cbfmt
+      actionlint
+      taplo
+      beautysh
+      dockerfmt
+      hadolint
+
+      # lsp
+      nixd
+      bash-language-server
+      docker-language-server
     ];
   }

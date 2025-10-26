@@ -1,9 +1,8 @@
+use super::jwt::TokenSecrets;
 use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, DatabaseConnection};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
-use crate::petring::jwt::TokenSecrets;
 
 #[derive(Clone)]
 pub struct AppState {
