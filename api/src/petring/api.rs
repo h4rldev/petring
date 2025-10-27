@@ -1,140 +1,151 @@
 use super::{PetRingResult, database, jwt, state};
 use axum::{
-    Json,
-    body::Body,
-    http::StatusCode,
-    response::{IntoResponse, Response},
+  Json,
+  body::Body,
+  http::StatusCode,
+  response::{IntoResponse, Response},
 };
 use serde::{Deserialize, Serialize};
 
-pub mod protected;
-pub mod public;
+mod protected;
+mod public;
+pub mod routes;
 
 #[derive(Serialize)]
-struct ServerInfo {
-    name: String,
-    version: String,
-    description: String,
-    authors: [String; 2],
-    license: String,
-    source: String,
-    server_uptime: String,
-    system_uptime: String,
+pub struct ServerInfo {
+  name: String,
+  version: String,
+  description: String,
+  authors: [String; 2],
+  license: String,
+  source: String,
+  server_uptime: String,
+  system_uptime: String,
 }
 
 #[derive(Serialize)]
-struct PublicAdResponse {
-    pub username: String,
-    pub image_url: String,
-    pub ad_url: String,
+pub struct PublicAdResponse {
+  pub username: String,
+  pub image_url: String,
+  pub ad_url: String,
 }
 
 #[derive(Serialize)]
-struct UserResponse {
-    username: String,
-    discord_id: u64,
-    url: String,
-    verified: bool,
-    created_at: String,
-    edited_at: String,
-    verified_at: String,
+pub struct UserResponse {
+  username: String,
+  discord_id: u64,
+  url: String,
+  verified: bool,
+  created_at: String,
+  edited_at: String,
+  verified_at: String,
 }
 
 #[derive(Serialize)]
 struct EditUserResponse {
-    old: UserResponse,
-    new: UserResponse,
+  old: UserResponse,
+  new: UserResponse,
 }
 
 #[derive(Serialize)]
 pub struct Serializeableuser {
-    pub username: String,
-    pub url: String,
+  pub username: String,
+  pub url: String,
 }
 
 #[derive(Serialize)]
 pub struct UsersResponse {
-    pub users: Vec<Serializeableuser>,
+  pub users: Vec<Serializeableuser>,
+}
+
+#[derive(Serialize)]
+pub struct BulkUsersResponse {
+  pub users: Vec<UserResponse>,
 }
 
 #[derive(Deserialize)]
 pub struct AdSubmission {
-    pub image_url: String,
-    pub discord_id: u64,
+  pub image_url: String,
+  pub discord_id: u64,
 }
 
 #[derive(Serialize)]
 pub struct AdResponse {
-    pub username: String,
-    pub discord_id: u64,
-    pub image_url: String,
-    pub ad_url: String,
-    pub verified: bool,
-    pub created_at: String,
-    pub edited_at: String,
-    pub verified_at: String,
+  pub username: String,
+  pub discord_id: u64,
+  pub image_url: String,
+  pub ad_url: String,
+  pub verified: bool,
+  pub created_at: String,
+  pub edited_at: String,
+  pub verified_at: String,
 }
 
 #[derive(Deserialize)]
 pub struct AdEditRequest {
-    pub discord_id: u64,
-    pub url: Option<String>,
+  pub discord_id: u64,
+  pub url: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct BulkAdsResponse {
+  pub ads: Vec<AdResponse>,
 }
 
 #[derive(Deserialize)]
 pub struct BulkUserDeleteRequest {
-    pub discord_ids: Option<Vec<u64>>,
-    pub usernames: Option<Vec<String>>,
+  pub discord_ids: Option<Vec<u64>>,
+  pub usernames: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]
 pub struct BulkUserDeleteResponse {
-    pub message: String,
-    pub discord_ids: Vec<u64>,
-    pub usernames: Vec<String>,
+  pub message: String,
+  pub discord_ids: Vec<u64>,
+  pub usernames: Vec<String>,
 }
 
 pub type BulkAdDeleteRequest = BulkUserDeleteRequest;
 
 #[derive(Serialize)]
 pub struct BulkAdDeleteResponse {
-    pub message: String,
-    pub discord_ids: Vec<u64>,
-    pub usernames: Vec<String>,
-    pub image_urls: Vec<String>,
+  pub message: String,
+  pub discord_ids: Vec<u64>,
+  pub usernames: Vec<String>,
+  pub image_urls: Vec<String>,
 }
 
 #[derive(Deserialize)]
 pub struct UserSubmission {
-    pub username: String,
-    pub url: String,
-    pub discord_id: u64,
+  pub username: String,
+  pub url: String,
+  pub discord_id: u64,
 }
 
 #[derive(Deserialize)]
 pub struct UserEdit {
-    pub discord_id: u64,
-    pub username: Option<String>,
-    pub url: Option<String>,
+  pub discord_id: u64,
+  pub username: Option<String>,
+  pub url: Option<String>,
 }
 
 #[derive(Serialize)]
 pub(crate) struct PetRingApiResponse {
-    pub status: u16,
-    pub message: String,
+  pub status: u16,
+  pub message: String,
 }
 
 pub(crate) fn petring_api_err(status: StatusCode, message: &str) -> Response<Body> {
-    (
-        status,
-        Json(PetRingApiResponse {
-            status: status.as_u16(),
-            message: message.to_string(),
-        }),
-    )
-        .into_response()
+  (
+    status,
+    Json(PetRingApiResponse {
+      status: status.as_u16(),
+      message: message.to_string(),
+    }),
+  )
+    .into_response()
 }
 
-pub(crate) fn petring_api_response<T: Serialize>(status: StatusCode, message: T) -> Response<Body> {
-    (status, Json(message)).into_response()
+pub(crate) fn petring_api_response<T: Serialize>(status: StatusCode, body: T) -> Response<Body> {
+  (status, Json(body)).into_response()
 }
