@@ -12,8 +12,11 @@ services:
     labels:
       com.centurylinklabs.watchtower.scope: petring-web
 
-    ports:
+    ports: # Unneeded if you're using traefik
       - 8080:8080
+
+    # networks: # For traefik (make sure the name is the same as your traefik network)
+    #   - proxy
 
     volumes:
       - ./petring-web.toml:/app/petring-web.toml
@@ -31,19 +34,34 @@ services:
     labels:
       com.centurylinklabs.watchtower.scope: petring-api
 
-    ports:
+    # networks: # For traefik (make sure the name is the same as your traefik network)
+    #   - proxy
+
+    ports: # Unneeded if you're using traefik
       - 8081:8081
 
     volumes:
       - ./petring-api.toml:/app/petring-api.toml
       - ./petring.db:/app/petring.db
+#   watchtower-web: # For auto-updates of petring-web
+#     image: containrrr/watchtower
+#     container_name: watchtower_petring-web
+#     volumes:
+#       - "/var/run/docker.sock:/var/run/docker.sock"
+#     command: --interval 30 --scope petring-web
+#     labels:
+#       com.centurylinklabs.watchtower.scope: petring-web
 
-  #   watchtower: # For auto-updates
-  #     image: containrrr/watchtower
-  #     container_name: watchtower_petring
-  #     volumes:
-  #       - "/var/run/docker.sock:/var/run/docker.sock"
-  #     command: --interval 30 --scope petring-web --scope petring-api
-  #     labels:
-  #       com.centurylinklabs.watchtower.scope: petring-web
-  #       com.centurylinklabs.watchtower.scope: petring-api
+#   watchtower-api: # For auto-updates of petring-api
+#     image: containrrr/watchtower
+#     container_name: watchtower_petring-api
+#     volumes:
+#       - "/var/run/docker.sock:/var/run/docker.sock"
+#     command: --interval 30 --scope petring-api
+#     labels:
+#      com.centurylinklabs.watchtower.scope: petring-api
+
+# networks: # For use with traefik (change it so it matches your traefik network)
+#   proxy:
+#     name: proxy # This and traefik.docker.network must match
+#     external: true
