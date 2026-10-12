@@ -3,7 +3,9 @@
 node_modules
 dist
 target
-.env
-petring.db
-test.json
-docker-data
+*.env
+*.db
+data
+*.log
+*.dump
+_build

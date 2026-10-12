@@ -1,0 +1,23 @@
+{application, petring, [
+  {description, "A pet-coded webring :3"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, {petring, []}},
+  {applications, [
+    kernel,
+    stdlib,
+    errm_http,
+    errm_json,
+    errm_jwt,
+    errm_uuid,
+    errm_sqlite,
+    errm_env,
+    errm_argon,
+    errm_ws,
+    errm_cmark_gfm
+  ]},
+  {env, []},
+  {modules, []},
+  {licenses, ["BSD-3"]},
+  {links, [{"GitHub", "https://github.com/h4rldev/petring"}]}
+ ]}.

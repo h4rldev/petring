@@ -1,0 +1,15 @@
+.git
+.direnv
+.github
+_build
+_checkouts
+result
+data
+*.beam
+*.dump
+*.crashdump
+*.log
+*.db
+*.env
+petring.env
+erl_crash.dump

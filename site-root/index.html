@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PetRing API test harness</title>
+<style>
+  :root { color-scheme: dark light; }
+  body { font: 14px/1.4 system-ui, sans-serif; margin: 1rem; max-width: 1100px; }
+  h1 { font-size: 1.2rem; }
+  fieldset { margin: 0 0 1rem; border: 1px solid #8884; border-radius: 6px; }
+  legend { font-weight: 600; padding: 0 .4rem; }
+  label { display: inline-block; margin: .15rem .5rem .15rem 0; }
+  input, select, button { font: inherit; padding: .15rem .35rem; }
+  input { width: 11rem; }
+  button { cursor: pointer; }
+  #log pre { background: #8881; border-left: 3px solid #888; padding: .4rem .6rem; margin: .3rem 0; white-space: pre-wrap; word-break: break-word; }
+</style>
+</head>
+<body>
+<h1>PetRing API test harness</h1>
+<p>Open the server root (e.g. <code>http://127.0.0.1:8080/</code>). Session cookie is used automatically for <code>/api/admin/*</code>; the manage token is sent as a Bearer header. <a href="/api" target="_blank">API reference</a>.</p>
+
+<fieldset>
+  <legend>Public</legend>
+  <button onclick="pubServerInfo()">server-info</button>
+  <button onclick="pubUptime()">uptime</button>
+  <button onclick="pubUsers()">list users</button>
+  <button onclick="pubRandomAd()">random-ad</button>
+  <button onclick="pubRandomUser()">random user (307)</button>
+  <label>user <input id="p_user" value="eva"></label>
+  <label>rel
+    <select id="p_rel"><option value="">(plain)</option><option>next</option><option>prev</option><option>random</option></select>
+  </label>
+  <button onclick="pubGetUser()">get user (307)</button>
+</fieldset>
+
+<fieldset>
+  <legend>User self-service</legend>
+  <label>username <input id="u_name" value="eva"></label>
+  <label>url <input id="u_url" value="https://eva.example.com"></label>
+  <label>contact <input id="u_contact" value="eva@example.com"></label>
+  <button onclick="userCreate()">create user</button>
+  <br>
+  <label>manage token <input id="m_token" style="width:24rem"></label>
+  <button onclick="setToken('')">clear token</button>
+  <br>
+  <button onclick="mgGet()">manage get</button>
+  <label>url <input id="m_url" placeholder="(unchanged)"></label>
+  <label>contact <input id="m_contact" placeholder="(unchanged)"></label>
+  <button onclick="mgUpdate()">manage update</button>
+  <button onclick="mgDelete()">manage delete</button>
+  <br>
+  <button onclick="adGet()">ad get</button>
+  <label>image_url <input id="ad_img" value="https://eva.example.com/ad.png"></label>
+  <button onclick="adCreate()">ad create</button>
+  <button onclick="adUpdate()">ad update</button>
+  <button onclick="adDelete()">ad delete</button>
+</fieldset>
+
+<fieldset>
+  <legend>Admin (session cookie)</legend>
+  <label>user <input id="a_user" value="superadmin"></label>
+  <label>pass <input id="a_pass" type="password" value="superadmin"></label>
+  <button onclick="admLogin()">login</button>
+  <button onclick="admMe()">me</button>
+  <button onclick="admLogout()">logout</button>
+  <button onclick="admAccounts()">list accounts</button>
+  <br>
+  <label>new user <input id="a_newuser" value="admin2"></label>
+  <label>new pass <input id="a_newpass" type="password"></label>
+  <label>role <select id="a_newrole"><option>admin</option><option>superadmin</option></select></label>
+  <button onclick="admCreateAccount()">create account</button>
+  <br>
+  <label>del user <input id="a_deluser" value="admin2"></label>
+  <button onclick="admDeleteAccount()">delete account</button>
+  <label>pw user <input id="a_pwuser" value="superadmin"></label>
+  <label>pw <input id="a_pw" type="password"></label>
+  <button onclick="admChangePass()">change password</button>
+  <hr>
+  <label>target user <input id="a_tuser" value="eva"></label>
+  <button onclick="admVerifyUser()">verify user</button>
+  <button onclick="admDelUser()">delete user</button>
+  <label>target ad <input id="a_tad" value="eva"></label>
+  <button onclick="admVerifyAd()">verify ad</button>
+  <button onclick="admDelAd()">delete ad</button>
+  <br>
+  <button onclick="admUnverifiedUsers()">unverified users</button>
+  <button onclick="admUnverifiedAds()">unverified ads</button>
+  <hr>
+  <label>scope <select id="bw_scope"><option>user_url</option><option>ad_url</option><option>global</option></select></label>
+  <button onclick="bwGet()">blocked get</button>
+  <label>keywords <input id="bw_kw" placeholder="comma,separated"></label>
+  <label>patterns <input id="bw_pt" placeholder="regex,comma,separated"></label>
+  <button onclick="bwPut()">blocked put</button>
+  <hr>
+  <button onclick="notifGet()">notifications get</button>
+  <button onclick="notifClear()">notifications clear</button>
+  <button onclick="wsToggle()">WS connect / disconnect</button>
+</fieldset>
+
+<fieldset>
+  <legend>Webhooks (admin)</legend>
+  <button onclick="whList()">list</button>
+  <label>id <input id="wh_id" value="1"></label>
+  <button onclick="whDelete()">delete</button>
+  <button onclick="whTest()">test</button>
+  <br>
+  <label>url <input id="wh_url" style="width:24rem"></label>
+  <label>format <select id="wh_format"><option>generic</option><option>discord</option><option>slack</option></select></label>
+  <br>
+  <label>events <input id="wh_events" style="width:24rem" value="*" placeholder="comma,separated; * = all"></label>
+  <button onclick="whCreate()">create</button>
+  <button onclick="whUpdate()">update (by id)</button>
+</fieldset>
+
+<fieldset>
+  <legend>Output</legend>
+  <button onclick="document.getElementById('log').replaceChildren()">clear log</button>
+  <div id="log"></div>
+</fieldset>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const val = id => $(id).value;
+
+  function log(title, payload) {
+    const pre = document.createElement('pre');
+    const body = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    pre.textContent = '[' + new Date().toLocaleTimeString() + '] ' + title + '\n' + body;
+    $('log').prepend(pre);
+  }
+
+  async function req(method, path, opts = {}) {
+    const headers = {};
+    if (opts.body !== undefined) headers['content-type'] = 'application/json';
+    if (opts.token) headers['authorization'] = 'Bearer ' + opts.token;
+    const init = { method, headers, credentials: 'same-origin' };
+    if (opts.body !== undefined) init.body = JSON.stringify(opts.body);
+    if (opts.redirect) init.redirect = opts.redirect;
+    try {
+      const res = await fetch(path, init);
+      const ct = res.headers.get('content-type') || '';
+      let data;
+      if (ct.includes('application/json')) {
+        try { data = await res.json(); } catch (e) { data = await res.text(); }
+      } else {
+        data = await res.text();
+      }
+      const out = { status: res.status, type: res.type, data };
+      const loc = res.headers.get('location');
+      if (loc) out.location = loc;
+      return out;
+    } catch (e) {
+      return { error: String(e) };
+    }
+  }
+
+  async function hit(title, method, path, opts) {
+    const r = await req(method, path, opts);
+    log(title + '  ' + method + ' ' + path, r);
+    return r;
+  }
+
+  function getToken() { return val('m_token') || localStorage.getItem('petring_token') || ''; }
+  function setToken(t) { $('m_token').value = t; if (t) localStorage.setItem('petring_token', t); else localStorage.removeItem('petring_token'); }
+  $('m_token').value = localStorage.getItem('petring_token') || '';
+
+  function pubServerInfo() { hit('server-info', 'GET', '/api/server-info'); }
+  function pubUptime() { hit('uptime', 'GET', '/api/uptime'); }
+  function pubUsers() { hit('users', 'GET', '/api/users'); }
+  function pubRandomAd() { hit('random-ad', 'GET', '/api/random-ad'); }
+  function pubRandomUser() { hit('random user', 'GET', '/api/users/random', { redirect: 'manual' }); }
+  function pubGetUser() {
+    const rel = val('p_rel');
+    const p = '/api/user/' + encodeURIComponent(val('p_user')) + (rel ? '/' + rel : '');
+    hit('get user', 'GET', p, { redirect: 'manual' });
+  }
+
+  async function userCreate() {
+    const r = await hit('create user', 'POST', '/api/users', { body: { username: val('u_name'), url: val('u_url'), contact: val('u_contact') } });
+    if (r && r.data && r.data.manage_token) { setToken(r.data.manage_token); log('captured manage_token', r.data.manage_token); }
+  }
+
+  function mgGet() { hit('manage get', 'GET', '/api/manage', { token: getToken() }); }
+  function mgUpdate() {
+    const body = {};
+    if (val('m_url')) body.url = val('m_url');
+    if (val('m_contact')) body.contact = val('m_contact');
+    hit('manage update', 'PATCH', '/api/manage', { token: getToken(), body });
+  }
+  function mgDelete() { if (confirm('Delete this user (via manage token)?')) hit('manage delete', 'DELETE', '/api/manage', { token: getToken() }); }
+  function adGet() { hit('ad get', 'GET', '/api/manage/ad', { token: getToken() }); }
+  function adCreate() { hit('ad create', 'POST', '/api/manage/ad', { token: getToken(), body: { image_url: val('ad_img') } }); }
+  function adUpdate() { hit('ad update', 'PATCH', '/api/manage/ad', { token: getToken(), body: { image_url: val('ad_img') } }); }
+  function adDelete() { hit('ad delete', 'DELETE', '/api/manage/ad', { token: getToken() }); }
+
+  function admLogin() { hit('admin login', 'POST', '/api/admin/login', { body: { username: val('a_user'), password: val('a_pass') } }); }
+  function admMe() { hit('admin me', 'GET', '/api/admin/me'); }
+  function admLogout() { hit('admin logout', 'GET', '/api/admin/logout'); }
+  function admAccounts() { hit('accounts', 'GET', '/api/admin/accounts'); }
+  function admCreateAccount() { hit('create account', 'POST', '/api/admin/accounts', { body: { username: val('a_newuser'), password: val('a_newpass'), role: val('a_newrole') } }); }
+  function admDeleteAccount() { hit('delete account', 'DELETE', '/api/admin/accounts/' + encodeURIComponent(val('a_deluser'))); }
+  function admChangePass() { hit('change password', 'POST', '/api/admin/accounts/' + encodeURIComponent(val('a_pwuser')) + '/password', { body: { password: val('a_pw') } }); }
+  function admUnverifiedUsers() { hit('unverified users', 'GET', '/api/admin/users/unverified'); }
+  function admUnverifiedAds() { hit('unverified ads', 'GET', '/api/admin/ads/unverified'); }
+  function admVerifyUser() { hit('verify user', 'POST', '/api/admin/users/' + encodeURIComponent(val('a_tuser')) + '/verify'); }
+  function admVerifyAd() { hit('verify ad', 'POST', '/api/admin/ads/' + encodeURIComponent(val('a_tad')) + '/verify'); }
+  function admDelUser() { hit('delete user', 'DELETE', '/api/admin/users/' + encodeURIComponent(val('a_tuser'))); }
+  function admDelAd() { hit('delete ad', 'DELETE', '/api/admin/ads/' + encodeURIComponent(val('a_tad'))); }
+ 
+  function bwGet() { hit('blocked get', 'GET', '/api/admin/blocked-words/' + val('bw_scope')); }
+  function bwPut() {
+    const split = s => s.split(',').map(x => x.trim()).filter(Boolean);
+    hit('blocked put', 'PUT', '/api/admin/blocked-words/' + val('bw_scope'), { body: { keywords: split(val('bw_kw')), patterns: split(val('bw_pt')) } });
+  }
+
+  function notifGet() { hit('notifications', 'GET', '/api/admin/notifications'); }
+  function notifClear() { hit('notifications clear', 'DELETE', '/api/admin/notifications'); }
+  const whEvents = () => val('wh_events').split(',').map(x => x.trim()).filter(Boolean);
+  function whList() { hit('webhooks', 'GET', '/api/admin/webhooks'); }
+  function whCreate() { hit('webhook create', 'POST', '/api/admin/webhooks', { body: { url: val('wh_url'), format: val('wh_format'), events: whEvents() } }); }
+  function whUpdate() { hit('webhook update', 'PATCH', '/api/admin/webhooks/' + encodeURIComponent(val('wh_id')), { body: { url: val('wh_url'), format: val('wh_format'), events: whEvents() } }); }
+  function whDelete() { hit('webhook delete', 'DELETE', '/api/admin/webhooks/' + encodeURIComponent(val('wh_id'))); }
+  function whTest() { hit('webhook test', 'POST', '/api/admin/webhooks/' + encodeURIComponent(val('wh_id')) + '/test'); }
+ 
+  let ws = null;
+  function wsToggle() {
+    if (ws && ws.readyState <= WebSocket.OPEN) { ws.close(); ws = null; return; }
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(proto + '://' + location.host + '/api/admin/notifications/ws');
+    ws.onopen = () => log('WS', 'connected');
+    ws.onmessage = e => log('WS message', e.data);
+    ws.onclose = e => log('WS closed', { code: e.code, reason: e.reason });
+    ws.onerror = () => log('WS error', 'see browser console');
+  }
+</script>
+</body>
+</html>

@@ -1,24 +1,13 @@
-# PetRing & PetAds
-
-> [!NOTE]
-> As of 2026-03-30, PetRing and Collar will be archived.
-> 
-> This is due to the jess museum discord server going defunct and the lack of interest in maintaining it.
-> 
-> If you'd like to extend or improve this, feel free to fork it.
->
-> If you want to actually maintain it and make it general purpose,
-> please make an issue request and i'll hand you the ownership.
->
-> Just please dont give me a request just to then abandon it yourself.
-
+# petRing & petAds
 
 > [!WARNING]
 > This project is in an early ALPHA and is not ready for any serious usecase
 >
 > Bugs will exist, and code will be messy; Keep that in mind.
 
-This is a webring and navlink ad system for the Jess Museum Discord server.
+PetRing is a webring and navlink ad system for the Jess Museum Discord server.
+It is written in Erlang (OTP 28) with rebar3 and runs as a single server that
+serves both the JSON API and the frontend.
 
 ## Table of Contents
 
@@ -31,7 +20,9 @@ This is a webring and navlink ad system for the Jess Museum Discord server.
 - [How to build](#how-to-build)
   - [Prerequisites](#prerequisites)
   - [Prebuild](#prebuild)
+  - [Configuration](#configuration)
   - [Finally](#finally)
+  - [Running](#running)
   - [Docker](#docker)
 - [Contributing](#contributing)
   - [For people without write access](#for-people-without-write-access)
@@ -44,103 +35,129 @@ This is a webring and navlink ad system for the Jess Museum Discord server.
 
 ### Requirements
 
-<!-- alex ignore just -->
-
-- Just (Optional)
-- A stable Rust toolchain
-  (preferrably stable-x86_64-unknown-linux-gnu, but musl can maybe work too)
+- Erlang/OTP 28
+- rebar3 3.27 or newer
 - SQLite3
-- OpenSSL (for generating random keys)
+- A C toolchain (`gcc`, `make`, `pkg-config`) plus the development headers for
+  SQLite3, brotli, libmagic, and libargon2, which are needed to build the errm
+  NIFs
+- just, which the errm NIF build hooks invoke
+- Nix (optional; the flake reproduces the full toolchain)
+- Docker (optional)
 
 ### Installation
 
 - Make an empty directory, and enter it
-- Run:
+- Clone the repo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | bash
+git clone https://github.com/h4rldev/petring.git
+cd petring
 ```
 
-- Or run:
+- Or enter the Nix dev shell, which provides every build dependency:
 
 ```bash
-wget -O - https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | bash
+nix develop
 ```
 
-- Check out [Collar](https://github.com/h4rldev/collar) to actually use PetRing.
+- A frontend is served from `site-root/`. [Collar](https://github.com/h4rldev/collar)
+  is a standalone client you can point at the API.
 
 ## How to build
 
 ### Prerequisites
 
-<!-- alex ignore just -->
-
-- Just (Optional)
-- A stable Rust toolchain
-  (preferrably stable-x86_64-unknown-linux-gnu, but musl can maybe work too)
-- SQLite3
-- OpenSSL (for generating random keys)
-- Docker (optional)
+- All of the [Requirements](#requirements) above
+- A populated `site-root/` directory if you want to serve a frontend (the HTML
+  API reference is served at `/api` regardless)
 
 ### Prebuild
 
-- Initialize a sqlite database
+petRing stores everything in a single SQLite database. Create and migrate it
+before the first run:
 
 ```bash
-sqlite3 petring.db "VACUUM;"
+rebar3 as migrations escriptize
+_build/migrations/bin/migrator migrate petring.db migrations
 ```
 
-- Setup your `.env` file according to the `.env.example` file
-- Then run the migrations
-<!-- alex ignore just -->
-- With just:
+The migrator takes the database path and, optionally, the migrations directory.
+Pass the directory whenever you run it from outside the repo root.
 
-```bash
-just migrations petring.db up
-```
+### Configuration
 
-<!-- alex ignore just -->
+Settings live in `petring-config.json`. The file is created with defaults on
+first boot if it does not exist.
 
-- Without just:
+| Key | Default | Description |
+| --- | --- | --- |
+| `port` | `8080` | HTTP listen port |
+| `internal_log_level` | `"info"` | Erlang logger level |
+| `db_path` | `"petring.db"` | SQLite database file |
+| `server_name` | `"petring"` | Server name |
+| `cors_origins` | `["*"]` | Allowed CORS origins |
+| `cors_credentials` | `false` | Allow credentials in CORS |
+| `url_reachability` | `false` | Require submitted URLs to be reachable |
+| `log_access` | `true` | Write an access log |
+| `access_log_file` | `""` | Access log file; when empty, logs to the Erlang logger |
 
-```bash
-pushd migration >/dev/null
-mv ../petring.db .
-cargo run --release -- up
-mv petring.db ../
-popd >/dev/null
-```
+Secrets and other environment variables are read from the environment first,
+and then from `petring.env` (also auto-generated on first boot).
+
+- `JWT_SECRET`: the session signing secret. Generated and written to
+  `petring.env` if it is not set.
+- `PETRING_SUPERADMIN_USER` / `PETRING_SUPERADMIN_PASS`: credentials for the
+  bootstrapped superadmin (default `superadmin` / `superadmin`). They are
+  applied only until the account is first modified.
 
 ### Finally
 
-<!-- alex ignore just -->
-
-- With just:
+Build the production escript:
 
 ```bash
-just build
+rebar3 as prod escriptize
 ```
 
-<!-- alex ignore just -->
+The escript lands at `_build/prod/bin/petring`.
 
-- Without just:
+### Running
 
 ```bash
-cargo build --release --bin petring-api
-cargo build --release --bin petring-web
+./_build/prod/bin/petring
 ```
 
-> You'll now find the binaries in the `target/release` directory.
+By default the server listens on `http://localhost:8080`. The JSON API is
+served under `/api`, and the HTML API reference is at `/api`. The frontend is
+served from `site-root/`, with `200.html` as the fallback for client side
+routing.
+
+For development you can compile and start without packaging:
+
+```bash
+rebar3 compile
+erl -noshell -pa _build/default/lib/*/ebin -eval 'petring:start(), timer:sleep(infinity).'
+```
 
 ### Docker
 
-- Clone the repo
-- Initialize the database
-- Setup your `.env` file according to the `.env.example` file
-- Run migrations
-- Edit the docker-compose.yml
-  (uncomment/comment out the lines according to what you need.)
-- Run the docker-compose
+A prebuilt multi-arch image is published to `ghcr.io/h4rldev/petring:latest`.
+The included compose file runs a single `petring` service, mounts `./data` for
+the database, config, and secrets, and serves on port `8080`:
+
+```bash
+docker compose up -d
+```
+
+Migrations run automatically on start. To build from source instead, comment
+out the `image:` line and uncomment `build: .` in `docker-compose.yml`.
+
+- Or, to deploy without cloning the repo, run the download script, which fetches
+  the compose files and starts the published image:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | bash
+```
 
 ## Contributing
 
@@ -150,21 +167,15 @@ cargo build --release --bin petring-web
 - Check out a new branch based on [dev](https://github.com/h4rldev/petring/tree/dev)
 - Make your changes
 - Test your changes locally.
-<!-- markdownlint-disable MD013 -->
 - If you want to be considerate, follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) spec.
 - Submit a PR describing what you've done
 
 ### For people with write access
 
-<!-- alex ignore just -->
-
 - No need to fork the repo, just clone it
 - And then follow the same instructions as above
-<!-- markdownlint-disable MD013 -->
 - When merging auto-prs, also follow the [conventional commits]( spec.
 
 ## License
-
-<!-- markdownlint-disable MD013 -->
 
 This project is licensed under the BSD-3 Clause License, see the [LICENSE](LICENSE) file for details.
