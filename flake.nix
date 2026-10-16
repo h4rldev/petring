@@ -34,6 +34,8 @@
           svelte-check
           typescript-language-server
           tailwindcss-language-server
+          prettierd
+          prettier
         ];
 
         shellHook = ''

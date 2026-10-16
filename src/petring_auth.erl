@@ -1,6 +1,6 @@
 -module (petring_auth).
 -export ([ensure_superadmin/0, login/1, logout/1, me/1, list_accounts/1, create_account/1,
-         delete_account/1, change_password/1]).
+         delete_account/1, change_password/1, change_username/1]).
 
 -define (SESSION_TTL, 30 * 86400).
 
@@ -231,6 +231,53 @@ set_password(Name, Password) ->
     {error, _} ->
       petring_respond:error(500, <<"Database error">>)
   end.
+
+-spec change_username(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+change_username(Req) ->
+  Name = name_param(Req),
+  Acting = maps:get(<<"sub">>, claims(Req), <<>>),
+  Self = Name =:= Acting,
+  case Self orelse target_manageable(Req, Name) of
+    false -> petring_respond:error(403, <<"Forbidden">>);
+    true ->
+      case body_map(Req) of
+        {ok, Body} ->
+          rename_account(Name, maps:get(<<"username">>, Body, <<>>), Self);
+        error ->
+          petring_respond:error(400, <<"Invalid JSON body">>)
+      end
+  end.
+
+rename_account(Name, NewName, Self) ->
+  case valid_username(NewName) of
+    false -> petring_respond:error(400, <<"Invalid username">>);
+    true -> do_rename_account(Name, NewName, Self)
+  end.
+
+do_rename_account(Name, NewName, Self) ->
+  case petring_db:db() of
+    {ok, Db} ->
+      try errm_sqlite:exec(Db,
+        "UPDATE accounts SET username = ?, auth_version = auth_version + 1, "
+            "updated_at = ? WHERE username = ?",
+            [NewName, now_secs(), Name]) of
+        {ok, Changes} when Changes > 0 ->
+          case Self of
+            true ->
+              case fetch_account(NewName) of
+                {ok, Account} -> issue_session(Account);
+                {error, _} -> petring_respond:error(500, <<"Database error">>)
+              end;
+            false ->
+              petring_respond:ok(#{<<"username">> => NewName}, [<<"username">>])
+          end;
+        _ ->
+          petring_respond:error(404, <<"Account not found">>)
+      catch _:_ -> petring_respond:error(409, <<"Username already exists">>) end;
+    {error, _} ->
+      petring_respond:error(500, <<"Database error">>)
+  end.
+
 
 -spec rank(binary()) -> non_neg_integer().
 rank(<<"superadmin">>) -> 2;

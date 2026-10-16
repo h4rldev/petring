@@ -1,0 +1,6 @@
+CREATE TABLE visits (
+  ip TEXT PRIMARY KEY,
+  hits INTEGER NOT NULL DEFAULT 1,
+  first_seen INTEGER NOT NULL,
+  last_seen INTEGER NOT NULL
+);

@@ -8,6 +8,7 @@ start() ->
   petring_db:init(),
   petring_auth:ensure_superadmin(),
   {ok, _} = pg:start_link(petring_ws),
+  petring_rate:start(),
 
   set_log_level(petring_config:get(internal_log_level)),
   logger:update_handler_config(default, formatter,

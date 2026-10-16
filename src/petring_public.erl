@@ -1,34 +1,11 @@
 -module (petring_public).
--export ([index/1, server_info/1, uptime/1, api_not_found/1,
-         get_users/1, random_user/1, random_ad/1,
-         get_user/1, user_next/1, user_prev/1, user_random/1]).
+-export ([index/1, server_info/1, uptime/1, stats/1, api_not_found/1,
+         get_users/1, get_ads/1, random_user/1, random_ad/1,
+         get_user/1, user_next/1, user_prev/1, user_random/1, sitemap/1]).
 
 -spec index(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 index(_Req) ->
-  petring_respond:html(index_html()).
-
-index_html() ->
-  <<"<!DOCTYPE html>\n"
-    "<html lang=\"en\"><head><meta charset=\"utf-8\"><title>petRing API</title></head>\n"
-    "<body><h1>petRing API</h1>\n"
-    "<h2>Webring</h2><ul>\n"
-    "<li><a href=\"/api/server-info\">/api/server-info</a> - server metadata: name, version, author, license, source and uptime.</li>\n"
-    "<li><a href=\"/api/uptime\">/api/uptime</a> - application and system uptime.</li>\n"
-    "<li><a href=\"/api/users\">/api/users</a> - every verified member as username and url.</li>\n"
-    "<li><a href=\"/api/users/random\">/api/users/random</a> - 307 redirect to a random verified member.</li>\n"
-    "<li><a href=\"/api/random-ad\">/api/random-ad</a> - a random verified ad: username, image_url, ad_url.</li>\n"
-    "<li><a href=\"/api/user/{username}\">/api/user/{username}</a> - 307 redirect to that member's site.</li>\n"
-    "<li><a href=\"/api/user/{username}/next\">/api/user/{username}/next</a> - 307 redirect to the next member in the ring.</li>\n"
-    "<li><a href=\"/api/user/{username}/prev\">/api/user/{username}/prev</a> - 307 redirect to the previous member.</li>\n"
-    "<li><a href=\"/api/user/{username}/random\">/api/user/{username}/random</a> - 307 redirect to a per-user seeded random member.</li>\n"
-    "</ul>\n"
-    "<h2>Newsletter</h2><ul>\n"
-    "<li><a href=\"/api/newsletter\">/api/newsletter</a> - all posts (id, slug, title, content_markdown, posted_at, edited_at), newest first.</li>\n"
-    "<li><a href=\"/api/newsletter/{id}\">/api/newsletter/{id}</a> - a single post by id or slug.</li>\n"
-    "<li><a href=\"/newsletter/feed.xml\">/newsletter/feed.xml</a> - RSS 2.0 feed with each post's markdown rendered to HTML.</li>\n"
-    "<li>\"/api/newsletter/ws\" - WebSocket streaming post created/updated/deleted events.</li>\n"
-    "</ul>\n"
-    "</body></html>\n">>.
+  petring_respond:redirect(<<"/docs/">>).
 
 -spec server_info(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 server_info(_Req) ->
@@ -51,6 +28,11 @@ uptime(_Req) ->
     <<"system_uptime">> => petring_uptime:format_duration(petring_uptime:system_uptime())
   }, [<<"app_uptime">>, <<"system_uptime">>]).
 
+-spec stats(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+stats(_Req) ->
+  petring_respond:ok(petring_visits:stats(), [<<"members">>, <<"ads">>, <<"visits">>, <<"unique_visits">>]).
+  
+
 -spec api_not_found(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 api_not_found(Req) ->
   Path = maps:get(raw_path, Req, <<"/api">>),
@@ -63,6 +45,17 @@ get_users(_Req) ->
       petring_respond:ok(
         #{<<"users">> => [petring_format:format_public_user(R) || R <- Rows]},
         [<<"users">>]);
+    error ->
+      petring_respond:error(500, <<"Database error">>)
+  end.
+
+-spec get_ads(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+get_ads(_Req) ->
+  case query("SELECT username, image_url, ad_url FROM ads WHERE verified = 1 ORDER BY id ASC", []) of
+    {ok, Rows} ->
+      petring_respond:ok(
+        #{<<"ads">> => [petring_format:format_public_ad(R) || R <- Rows]},
+        [<<"ads">>]);
     error ->
       petring_respond:error(500, <<"Database error">>)
   end.
@@ -98,7 +91,7 @@ get_user(Req) ->
         #{<<"message">> => <<"Hey, you followed the API reference, but {username} leads nowhere!">>},
         [<<"message">>]);
     Name ->
-      case url_of("SELECT url FROM users WHERE username = ? LIMIT 1", [Name]) of
+      case url_of("SELECT url FROM users WHERE username = ? AND verified = 1 LIMIT 1", [Name]) of
         {ok, Url} ->
           petring_respond:redirect(Url);
         empty ->
@@ -110,11 +103,11 @@ get_user(Req) ->
 
 -spec user_next(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 user_next(Req) ->
-  case row("SELECT id FROM users WHERE username = ? LIMIT 1", [name_param(Req)]) of
+  case row("SELECT id FROM users WHERE username = ? AND verified = 1 LIMIT 1", [name_param(Req)]) of
     {ok, R} ->
       wrap_redirect(
-        "SELECT url FROM users WHERE id > ? ORDER BY id ASC LIMIT 1",
-        "SELECT url FROM users ORDER BY id ASC LIMIT 1",
+        "SELECT url FROM users WHERE verified = 1 AND id > ? ORDER BY id ASC LIMIT 1",
+        "SELECT url FROM users WHERE verified = 1 ORDER BY id ASC LIMIT 1",
         maps:get("id", R));
     empty ->
       petring_respond:error(404, <<"User not found">>);
@@ -196,3 +189,41 @@ url_of(Sql, Args) ->
 
 name_param(Req) ->
   maps:get(<<"name">>, maps:get(params, Req, #{}), <<>>).
+
+-spec sitemap(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+sitemap(_Req) ->
+  Site = petring_config:get(server_url),
+  Body = iolist_to_binary([
+    <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n">>,
+    <<"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n">>,
+    [url_tag([Site, P]) || P <- ["/", "/newsletter/", "/docs/", "/login/"]],
+    [url_tag([Site, "/newsletter/", slug_of(R), "/"]) || R <- newsletter_rows()],
+    <<"</urlset>\n">>
+  ]),
+  {ok, {200, #{<<"content-type">> => <<"application/xml; charset=utf-8">>}, Body}}.
+
+url_tag(Url) ->
+  [<<"<url><loc>">>, xml_esc(iolist_to_binary(Url)), <<"</loc></url>\n">>].
+
+newsletter_rows() ->
+  case query("SELECT slug FROM newsletter ORDER BY posted_at DESC", []) of
+    {ok, Rows} -> Rows;
+    error -> []
+  end.
+
+slug_of(Row) ->
+  case maps:get("slug", Row, <<>>) of
+    B when is_binary(B) -> B;
+    L when is_list(L) -> list_to_binary(L);
+    _ -> <<>>
+  end.
+
+xml_esc(Bin) ->
+  iolist_to_binary([xml_char(C) || <<C>> <= Bin]).
+
+xml_char($&) -> <<"&amp;">>;
+xml_char($<) -> <<"&lt;">>;
+xml_char($>) -> <<"&gt;">>;
+xml_char($") -> <<"&quot;">>;
+xml_char($') -> <<"&apos;">>;
+xml_char(C) -> <<C>>.

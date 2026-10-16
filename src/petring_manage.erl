@@ -199,7 +199,8 @@ delete_ad(Req) ->
   end.
 
 user_order() -> [<<"id">>, <<"username">>, <<"url">>, <<"contact">>, <<"verified">>,
-                 <<"created_at">>, <<"edited_at">>, <<"verified_at">>].
+                 <<"created_at">>, <<"edited_at">>, <<"verified_at">>,
+                 <<"manage_token_created_at">>, <<"manage_token_last_used_at">>].
 
 ad_order() -> [<<"id">>, <<"username">>, <<"image_url">>, <<"ad_url">>, <<"verified">>,
                <<"created_at">>, <<"edited_at">>, <<"verified_at">>].

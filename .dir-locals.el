@@ -1,4 +1,4 @@
-;;; .dir-locals.el --- Petring project-local variables -*- lexical-binding: t; -*-
+;;; .dir-locals.el --- petRing project-local variables -*- lexical-binding: t; -*-
 ((prog-mode . ((indent-tabs-mode . nil)))
  (sh-mode . ((sh-basic-offset . 2)))
  (erlang-mode

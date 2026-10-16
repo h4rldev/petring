@@ -17,13 +17,13 @@ done
 
 mkdir -p data
 
-echo "Pulling the PetRing image"
+echo "Pulling the petRing image"
 docker compose pull
 
-echo "Starting PetRing"
+echo "Starting petRing"
 docker compose up -d
 
-echo "PetRing is now running on http://localhost:8080"
+echo "petRing is now running on http://localhost:8080"
 echo "Its database, config and secrets live in ./data"
 echo "IMPORTANT: the superadmin defaults to superadmin/superadmin until you first modify the account."
 echo "Cheers!"

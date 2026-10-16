@@ -45,6 +45,13 @@ ENV REBAR_PROFILE=prod
 COPY src ./src
 RUN rebar3 as prod escriptize
 
+FROM denoland/deno:2.9.7 AS frontend
+WORKDIR /app/frontend
+COPY frontend/deno.lock frontend/package.json frontend/.npmrc ./
+RUN deno install
+COPY frontend ./
+RUN mkdir -p /app/site-root && deno task build
+
 FROM alpine:3.22 AS runtime
 RUN   apk add --no-cache \
       erlang28 sqlite-libs argon2-libs brotli ncurses-libs file \
@@ -58,7 +65,7 @@ WORKDIR /app
 COPY --from=prod /build/_build/prod/bin/petring ./petring
 COPY --from=migbuild /build/_build/migrations/bin/migrator ./migrator
 COPY --from=migbuild /build/migrations ./migrations
-COPY site-root ./site-root
+COPY --from=frontend /app/site-root ./site-root
 COPY docker/start.sh ./start.sh
 RUN chmod +x ./petring ./migrator ./start.sh \
  && mkdir -p /app/data && chown -R app:app /app

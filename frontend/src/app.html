@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="petRing: a pet-coded, queer-friendly webring and nav-link ads provider, free and fully open-source."
+    />
+    <meta property="og:site_name" content="petRing" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="petRing" />
+    <meta
+      property="og:description"
+      content="A pet-coded, queer-friendly webring and nav-link ads provider."
+    />
+    <meta property="og:image" content="https://webring.pet/paw.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="text-scale" content="scale" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("petring_theme");
+          if (t === "dawn" || t === "dusk" || t === "midnight") {
+            document.documentElement.dataset.theme = t;
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="icon" href="%sveltekit.assets%/paw.ico" />
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>

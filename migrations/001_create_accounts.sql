@@ -9,3 +9,4 @@ CREATE TABLE accounts (
 );
 
 CREATE INDEX idx_accounts_username ON accounts(username);
+CREATE UNIQUE INDEX idx_one_superadmin ON accounts(role) WHERE role = 'superadmin';

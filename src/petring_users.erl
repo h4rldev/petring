@@ -3,20 +3,20 @@
 
 -spec submit(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 submit(Req) ->
-  case body_map(Req) of
-    {ok, Body} ->
-      Username = maps:get(<<"username">>, Body, <<>>),
-      Url = maps:get(<<"url">>, Body, <<>>),
-      Contact = maps:get(<<"contact">>, Body, <<>>),
-      do_submit(Username, Url, Contact, submit_ip(Req));
-    error ->
-      petring_respond:error(400, <<"Invalid JSON body">>)
-  end.
-
-submit_ip(Req) ->
-  case petring_ip:client_ip(Req) of
-    <<"unknown">> -> null;
-    Ip -> Ip
+  Ip = petring_ip:client_ip(Req),
+  case petring_rate:attempt(Ip) of
+    hard -> petring_respond:error(429, <<"Too many submissions from your network, please contact us.">>);
+    soft -> petring_respond:error(429, <<"Too many submissions, please try again in a minute.">>);
+    allow ->
+      case body_map(Req) of
+        {ok, Body} ->
+          Username = maps:get(<<"username">>, Body, <<>>),
+          Url = maps:get(<<"url">>, Body, <<>>),
+          Contact = maps:get(<<"contact">>, Body, <<>>),
+          do_submit(Username, Url, Contact, Ip);
+        error ->
+          petring_respond:error(400, <<"Invalid JSON body">>)
+      end
   end.
 
 do_submit(<<>>, _, _, _) ->
@@ -41,10 +41,7 @@ insert(Username, Url, Contact, Ip) ->
               true ->
                 petring_respond:error(409, <<"Url already exists">>);
               false ->
-                case ip_used(Db, Ip) of
-                  true -> petring_respond:error(409, <<"Already submitted from this IP, if you share an IP with someone who's already submitted and wish to submit, please contact us!">>);
-                  false -> do_insert(Db, Username, Url, Contact, Ip)
-                end
+                do_insert(Db, Username, Url, Contact, Ip)
             end
         end
       catch _:_ -> petring_respond:error(500, <<"Database error">>)
@@ -53,16 +50,14 @@ insert(Username, Url, Contact, Ip) ->
       petring_respond:error(500, <<"Database error">>)
   end.
 
-ip_used(_Db, null) -> false;
-ip_used(Db, Ip) ->
-  exists(Db, "SELECT 1 FROM users WHERE submit_ip = ? LIMIT 1", Ip).
-
 do_insert(Db, Username, Url, Contact, Ip) ->
   Token = petring_token:mint(),
+  Now = erlang:system_time(second),
   {ok, _} = errm_sqlite:exec(Db,
-    "INSERT INTO users (username, url, contact, manage_token_hash, submit_ip, verified, created_at) "
-    "VALUES (?, ?, ?, ?, ?, 0, ?)",
-    [Username, Url, Contact, petring_token:hash(Token), Ip, erlang:system_time(second)]),
+    "INSERT INTO users (username, url, contact, manage_token_hash, manage_token_created_at, submit_ip, verified, created_at) "
+    "VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+    [Username, Url, Contact, petring_token:hash(Token), Now, Ip, Now]),
+  petring_rate:record(Ip),
   petring_notifications:record(<<"user">>, <<"submit">>, Username, Url, <<>>, <<>>),
   {ok, [Row]} = errm_sqlite:query(Db,
     "SELECT * FROM users WHERE username = ? LIMIT 1", [Username]),

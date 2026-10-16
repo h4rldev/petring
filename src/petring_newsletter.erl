@@ -1,10 +1,17 @@
 -module (petring_newsletter).
--export ([list/1, get/1, feed/1, create/1, update/1, delete/1]).
+-export ([list/1, list_all/1, get/1, feed/1, create/1, update/1, delete/1]).
 
--define(ORDER, [<<"id">>, <<"slug">>, <<"title">>, <<"content_markdown">>, <<"posted_at">>, <<"edited_at">>]).
+-define(ORDER, [<<"id">>, <<"slug">>, <<"title">>, <<"content_markdown">>, <<"status">>, <<"authors">>, <<"posted_at">>, <<"edited_at">>]).
 
 -spec list(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 list(_Req) ->
+  case query("SELECT * FROM newsletter WHERE status = 'published' AND posted_at <= ? ORDER BY posted_at DESC, id DESC", [now_secs()]) of
+    {ok, Rows} -> petring_respond:ok(#{<<"newsletter">> => [petring_format:format_newsletter(R) || R <- Rows]}, [<<"newsletter">>]);
+    error -> petring_respond:error(500, <<"Database error">>)
+  end.
+
+-spec list_all(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+list_all(_Req) ->
   case query("SELECT * FROM newsletter ORDER BY posted_at DESC, id DESC", []) of
     {ok, Rows} -> petring_respond:ok(#{<<"newsletter">> => [petring_format:format_newsletter(R) || R <- Rows]}, [<<"newsletter">>]);
     error -> petring_respond:error(500, <<"Database error">>)
@@ -13,13 +20,17 @@ list(_Req) ->
 -spec get(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 get(Req) ->
   case find(key_param(Req)) of
-    {ok, Row} -> petring_respond:ok(petring_format:format_newsletter(Row), ?ORDER);
+    {ok, Row} ->
+      case visible(Row) of
+        true -> petring_respond:ok(petring_format:format_newsletter(Row), ?ORDER);
+        false -> petring_respond:error(404, <<"Newsletter not found">>)
+      end;
     error -> petring_respond:error(404, <<"Newsletter not found">>)
   end.
 
 -spec feed(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 feed(_Req) ->
-  case query("SELECT * FROM newsletter ORDER BY posted_at DESC, id DESC", []) of
+  case query("SELECT * FROM newsletter WHERE status = 'published' AND posted_at <= ? ORDER BY posted_at DESC, id DESC", [now_secs()]) of
     {ok, Rows} ->
       Site = petring_config:get(server_url),
       Body = iolist_to_binary(render_feed(Rows, Site)),
@@ -34,14 +45,16 @@ create(Req) ->
     {ok, Body} ->
       do_create(maps:get(<<"title">>, Body, undefined),
                 maps:get(<<"slug">>, Body, undefined),
-                maps:get(<<"content_markdown">>, Body, undefined))
+                maps:get(<<"content_markdown">>, Body, undefined),
+                maps:get(<<"status">>, Body, <<"published">>),
+                maps:get(<<"posted_at">>, Body, undefined), actor(Req))
   end.
 
 -spec update(Req :: errm_http:request()) -> {ok, errm_http:response()}.
 update(Req) ->
   case body_map(Req) of
     error -> petring_respond:error(400, <<"Invalid body">>);
-    {ok, Body} -> do_update(key_param(Req), Body)
+    {ok, Body} -> do_update(key_param(Req), Body, actor(Req))
   end.
 
 -spec delete(Req :: errm_http:request()) -> {ok, errm_http:response()}.
@@ -57,16 +70,16 @@ delete(Req) ->
       end
   end.
 
-do_create(Title, Slug, Content) ->
-  case valid_entry(Title, Slug, Content) of
+do_create(Title, Slug, Content, Status, PostedAt, Actor) ->
+  case valid_entry(Title, Slug, Content, Status) of
     false -> petring_respond:error(400, <<"Invalid newsletter">>);
     true ->
-      case run("INSERT INTO newsletter (slug, title, content_markdown, posted_at) VALUES (?, ?, ?, ?)",
-               [Slug, Title, Content, now_secs()]) of
+      case run("INSERT INTO newsletter (slug, title, content_markdown, status, posted_at, authors) VALUES (?, ?, ?, ?, ?, ?)",
+               [Slug, Title, Content, Status, pub_time(PostedAt), errm_json:encode(add_author([], Actor))]) of
         {ok, _} ->
           case latest() of
             {ok, Row} ->
-              petring_newsletter_ws:broadcast(<<"created">>, petring_format:format_newsletter(Row)),
+              maybe_broadcast(<<"created">>, Row),
               respond_row(Row);
             error -> petring_respond:error(500, <<"Database error">>)
           end;
@@ -75,23 +88,29 @@ do_create(Title, Slug, Content) ->
       end
   end.
 
-do_update(Key, Body) ->
+do_update(Key, Body, Actor) ->
   case find(Key) of
     error -> petring_respond:error(404, <<"Newsletter not found">>);
     {ok, Row} ->
       Title = field(Body, <<"title">>, Row, "title"),
       Slug = field(Body, <<"slug">>, Row, "slug"),
       Content = field(Body, <<"content_markdown">>, Row, "content_markdown"),
-      case valid_entry(Title, Slug, Content) of
+      Status = field(Body, <<"status">>, Row, "status"),
+      Authors = errm_json:encode(add_author(authors(Row), Actor)),
+      Posted = case maps:get(<<"posted_at">>, Body, undefined) of
+                 undefined -> maps:get("posted_at", Row, now_secs());
+                 Value -> pub_time(Value)
+               end,
+      case valid_entry(Title, Slug, Content, Status) of
         false -> petring_respond:error(400, <<"Invalid newsletter">>);
         true ->
           Id = maps:get("id", Row),
-          case run("UPDATE newsletter SET title = ?, slug = ?, content_markdown = ?, edited_at = ? WHERE id = ?",
-                   [Title, Slug, Content, now_secs(), Id]) of
+          case run("UPDATE newsletter SET title = ?, slug = ?, content_markdown = ?, status = ?, posted_at = ?, edited_at = ?, authors = ? WHERE id = ?",
+                   [Title, Slug, Content, Status, Posted, now_secs(), Authors, Id]) of
             {ok, _} ->
               case find({id, Id}) of
                 {ok, Updated} ->
-                  petring_newsletter_ws:broadcast(<<"updated">>, petring_format:format_newsletter(Updated)),
+                  maybe_broadcast(<<"updated">>, Updated),
                   respond_row(Updated);
                 error -> petring_respond:error(500, <<"Database error">>)
               end;
@@ -110,11 +129,47 @@ insert_error(Reason) ->
 respond_row(Row) ->
   petring_respond:ok(petring_format:format_newsletter(Row), ?ORDER).
 
-valid_entry(Title, Slug, Content) ->
-  nonempty(Title) andalso nonempty(Slug) andalso nonempty(Content).
+visible(Row) ->
+  maps:get("status", Row, <<"published">>) =:= <<"published">>
+    andalso maps:get("posted_at", Row, 0) =< now_secs().
+
+maybe_broadcast(Action, Row) ->
+  case visible(Row) of
+    true -> petring_newsletter_ws:broadcast(Action, petring_format:format_newsletter(Row));
+    false -> ok
+  end.
+
+pub_time(Value) when is_integer(Value) -> Value;
+pub_time(_) -> now_secs().
+
+valid_entry(Title, Slug, Content, Status) ->
+  nonempty(Title) andalso nonempty(Slug) andalso nonempty(Content) andalso valid_status(Status).
+
+valid_status(<<"draft">>) -> true;
+valid_status(<<"published">>) -> true;
+valid_status(_) -> false.
 
 nonempty(B) when is_binary(B) -> B =/= <<>>;
 nonempty(_) -> false.
+
+actor(Req) ->
+  case petring_middlewares:get_claims(Req) of
+    Claims when is_map(Claims) -> maps:get(<<"sub">>, Claims, <<>>);
+    _ -> <<>>
+  end.
+
+authors(Row) ->
+  case errm_json:decode(maps:get("authors", Row, <<"[]">>)) of
+    {ok, List} when is_list(List) -> List;
+    _ -> []
+  end.
+
+add_author(Current, <<>>) -> Current;
+add_author(Current, Actor) ->
+  case lists:member(Actor, Current) of
+    true -> Current;
+    false -> Current ++ [Actor]
+  end.
 
 field(Body, Key, Row, DKey) ->
   case maps:get(Key, Body, undefined) of

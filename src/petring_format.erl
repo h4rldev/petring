@@ -29,7 +29,9 @@ format_user(Row) ->
     <<"verified">> => to_bool(maps:get("verified", Row, 0)),
     <<"created_at">> => maps:get("created_at", Row, null),
     <<"edited_at">> => maps:get("edited_at", Row, null),
-    <<"verified_at">> => maps:get("verified_at", Row, null)
+    <<"verified_at">> => maps:get("verified_at", Row, null),
+    <<"manage_token_created_at">> => maps:get("manage_token_created_at", Row, null),
+    <<"manage_token_last_used_at">> => maps:get("manage_token_last_used_at", Row, null)
   }.
 
 -spec format_ad(Row :: map()) -> Formatted :: map().
@@ -65,8 +67,9 @@ format_notification(Row) ->
     <<"content">> => maps:get("content", Row, null),
     <<"ref_id">> => maps:get("ref_id", Row, null),
     <<"target">> => maps:get("target", Row, null),
-    <<"created_at">> => maps:get("created_at", Row, null)
-  }.
+    <<"created_at">> => maps:get("created_at", Row, null),
+    <<"read">> => to_bool(maps:get("read", Row, 0))
+   }.
 
 -spec format_blocked_word(Row :: map()) -> Formatted :: map().
 format_blocked_word(Row) ->
@@ -87,7 +90,11 @@ format_webhook(Row) ->
     <<"events">> => decode_array(maps:get("events", Row, <<"[]">>)),
     <<"enabled">> => to_bool(maps:get("enabled", Row, 0)),
     <<"created_at">> => maps:get("created_at", Row, null),
-    <<"updated_at">> => maps:get("updated_at", Row, null)
+    <<"updated_at">> => maps:get("updated_at", Row, null),
+    <<"secret">> => maps:get("secret", Row, null),
+    <<"last_status">> => maps:get("last_status", Row, null),
+    <<"last_error">> => maps:get("last_error", Row, null),
+    <<"last_delivered_at">> => maps:get("last_delivered_at", Row, null)
   }.
 
 -spec format_newsletter(Row :: map()) -> Formatted :: map().
@@ -97,6 +104,8 @@ format_newsletter(Row) ->
     <<"slug">> => maps:get("slug", Row, null),
     <<"title">> => maps:get("title", Row, null),
     <<"content_markdown">> => maps:get("content_markdown", Row, null),
+    <<"status">> => maps:get("status", Row, <<"published">>),
+    <<"authors">> => decode_array(maps:get("authors", Row, <<"[]">>)),
     <<"posted_at">> => maps:get("posted_at", Row, null),
     <<"edited_at">> => maps:get("edited_at", Row, null)
   }.

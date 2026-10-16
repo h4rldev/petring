@@ -3,6 +3,8 @@ CREATE TABLE newsletter (
   slug TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
   content_markdown TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'published',
+  authors TEXT NOT NULL DEFAULT '[]',
   posted_at INTEGER NOT NULL,
   edited_at INTEGER
 );

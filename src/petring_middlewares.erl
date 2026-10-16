@@ -1,5 +1,5 @@
 -module (petring_middlewares).
--export ([get/0, auth_middleware/0, authenticate/1, get_claims/1, get_manage_user/1, is_admin/1]).
+-export ([get/0, auth_middleware/0, authenticate/1, get_claims/1, get_manage_user/1]).
 
 get() ->
   Compression = #{preferred => [zstd, gzip], compression_level => 9, min_length => 256},
@@ -10,7 +10,7 @@ get() ->
       #{
         origin => cors_origin(),
         methods => [get, post, put, patch, delete, head],
-        headers => ["Accept", "Content-Type", "Authorization"],
+        headers => ["Accept", "Content-Type", "Authorization", "X-Dry-Run"],
         credentials => petring_config:get(cors_credentials),
         max_age => 604800
       }
@@ -19,11 +19,13 @@ get() ->
 
   [
     petring_access_log:middleware(),
+    petring_visits:middleware(),
     errm_http_compress:compress(Compression),
     CORS,
     errm_http_cookie:with_cookies(),
     auth_middleware(),
-    errm_http_compress:decompress(Decompression)
+    errm_http_compress:decompress(Decompression),
+    petring_dry_run:middleware()
   ].
 
 cors_origin() ->
@@ -116,7 +118,9 @@ manage_lookup(Token) ->
       try errm_sqlite:query(Db,
             "SELECT * FROM users WHERE manage_token_hash = ? LIMIT 1",
             [Hash]) of
-        {ok, [Row]} -> {ok, Row};
+        {ok, [Row]} ->
+          touch_manage(Db, maps:get("username", Row, undefined)),
+          {ok, Row};
         _ -> {error, invalid_token}
       catch _:_ -> {error, db_error}
       end;
@@ -124,13 +128,21 @@ manage_lookup(Token) ->
       {error, db_error}
   end.
 
+touch_manage(Db, Username) when is_binary(Username) ->
+  try errm_sqlite:exec(Db,
+    "UPDATE users SET manage_token_last_used_at = ? WHERE username = ?",
+    [erlang:system_time(second), Username]
+  ) of
+    {ok, _} -> ok
+  catch _:_ -> ok
+  end;
+touch_manage(_, _) -> ok.
+
+
+
 -spec get_claims(Req :: errm_http:request()) -> map() | undefined.
 get_claims(Req) ->
   maps:get(claims, Req, undefined).
-
--spec is_admin(Req :: errm_http:request()) -> boolean().
-is_admin(Req) ->
-  get_claims(Req) =/= undefined.
 
 -spec get_manage_user(Req :: errm_http:request()) -> map().
 get_manage_user(Req) ->

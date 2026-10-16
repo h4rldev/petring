@@ -5,8 +5,7 @@
 >
 > Bugs will exist, and code will be messy; Keep that in mind.
 
-PetRing is a webring and navlink ad system for the Jess Museum Discord server.
-It is written in Erlang (OTP 28) with rebar3 and runs as a single server that
+petRing is the pet-coded webring and navlink ad system; Written in Erlang (OTP 28) with rebar3 and runs as a single server that
 serves both the JSON API and the frontend.
 
 ## Table of Contents
@@ -19,6 +18,7 @@ serves both the JSON API and the frontend.
   - [Installation](#installation)
 - [How to build](#how-to-build)
   - [Prerequisites](#prerequisites)
+  - [Frontend](#frontend)
   - [Prebuild](#prebuild)
   - [Configuration](#configuration)
   - [Finally](#finally)
@@ -38,16 +38,16 @@ serves both the JSON API and the frontend.
 - Erlang/OTP 28
 - rebar3 3.27 or newer
 - SQLite3
-- A C toolchain (`gcc`, `make`, `pkg-config`) plus the development headers for
+- A C toolchain (`gcc`, `pkg-config`) plus the development headers for
   SQLite3, brotli, libmagic, and libargon2, which are needed to build the errm
   NIFs
 - just, which the errm NIF build hooks invoke
+- Deno, which builds the frontend
 - Nix (optional; the flake reproduces the full toolchain)
 - Docker (optional)
 
 ### Installation
 
-- Make an empty directory, and enter it
 - Clone the repo:
 
 ```bash
@@ -55,22 +55,40 @@ git clone https://github.com/h4rldev/petring.git
 cd petring
 ```
 
-- Or enter the Nix dev shell, which provides every build dependency:
+- And for people using Nix or NixOS, optionally enter the Nix dev shell, which provides every build dependency:
 
 ```bash
 nix develop
 ```
 
-- A frontend is served from `site-root/`. [Collar](https://github.com/h4rldev/collar)
-  is a standalone client you can point at the API.
+- Or
+
+```bash
+direnv allow
+```
 
 ## How to build
 
 ### Prerequisites
 
 - All of the [Requirements](#requirements) above
-- A populated `site-root/` directory if you want to serve a frontend (the HTML
-  API reference is served at `/api` regardless)
+- A populated `site-root/` directory if you want to serve the frontend (see
+  [Frontend](#frontend))
+
+### Frontend
+
+The SvelteKit app lives in `frontend/` and builds into `site-root/`, which the
+server serves. Build it with Deno:
+
+```bash
+cd frontend
+deno install
+deno task build
+```
+
+The `build` task runs `vite build` and moves the output into `site-root/`. The
+server serves that directory and falls back to `200.html` for client side
+routing. The interactive API reference is the `/docs/` page of the frontend.
 
 ### Prebuild
 
@@ -96,6 +114,7 @@ first boot if it does not exist.
 | `internal_log_level` | `"info"` | Erlang logger level |
 | `db_path` | `"petring.db"` | SQLite database file |
 | `server_name` | `"petring"` | Server name |
+| `server_url` | `"https://your-domain.example"` | Public base URL used in feeds, the sitemap, and webhook payloads |
 | `cors_origins` | `["*"]` | Allowed CORS origins |
 | `cors_credentials` | `false` | Allow credentials in CORS |
 | `url_reachability` | `false` | Require submitted URLs to be reachable |
@@ -128,9 +147,9 @@ The escript lands at `_build/prod/bin/petring`.
 ```
 
 By default the server listens on `http://localhost:8080`. The JSON API is
-served under `/api`, and the HTML API reference is at `/api`. The frontend is
-served from `site-root/`, with `200.html` as the fallback for client side
-routing.
+served under `/api` (`/api` itself redirects to the frontend `/docs/` page),
+and the frontend is served from `site-root/`, with `200.html` as the fallback
+for client side routing.
 
 For development you can compile and start without packaging:
 
@@ -143,14 +162,15 @@ erl -noshell -pa _build/default/lib/*/ebin -eval 'petring:start(), timer:sleep(i
 
 A prebuilt multi-arch image is published to `ghcr.io/h4rldev/petring:latest`.
 The included compose file runs a single `petring` service, mounts `./data` for
-the database, config, and secrets, and serves on port `8080`:
+the database, config, and secrets, and serves on port `8080` by default:
 
 ```bash
 docker compose up -d
 ```
 
-Migrations run automatically on start. To build from source instead, comment
-out the `image:` line and uncomment `build: .` in `docker-compose.yml`.
+The image builds the backend, the migrator, and the frontend, and runs
+migrations automatically on start. To build from source instead, comment out
+the `image:` line and uncomment `build: .` in `docker-compose.yml`.
 
 - Or, to deploy without cloning the repo, run the download script, which fetches
   the compose files and starts the published image:
@@ -174,7 +194,7 @@ curl -fsSL https://raw.githubusercontent.com/h4rldev/petring/main/download.sh | 
 
 - No need to fork the repo, just clone it
 - And then follow the same instructions as above
-- When merging auto-prs, also follow the [conventional commits]( spec.
+- When merging auto-prs, also follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) spec.
 
 ## License
 
