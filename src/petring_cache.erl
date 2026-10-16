@@ -1,6 +1,6 @@
--module(petring_cache).
--include_lib("kernel/include/file.hrl").
--export([middleware/1]).
+-module (petring_cache).
+-include_lib ("kernel/include/file.hrl").
+-export ([middleware/1]).
 
 -spec middleware([{binary(), binary()}]) -> errm_http:middleware().
 middleware(Rules) ->
