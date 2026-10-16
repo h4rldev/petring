@@ -1,0 +1,14 @@
+{application, migrator,
+ [{description, "A migrator escript"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications,
+   [kernel,
+    stdlib,
+    errm_sqlite
+   ]},
+  {env,[]},
+  {modules, []},
+  {licenses, ["BSD-3"]},
+  {links, [{"GitHub", "https://github.com/h4rldev/petring"}]}
+ ]}.

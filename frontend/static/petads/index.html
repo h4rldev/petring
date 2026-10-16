@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>petAds</title>
+    <style>
+      @font-face {
+        font-family: TopazPlus;
+        src: url("/petads/topaz.ttf") format("truetype");
+        font-display: swap;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .frame {
+        position: relative;
+        width: min(100vw, 100vh);
+        height: min(100vw, 100vh);
+        overflow: hidden;
+      }
+
+      .ad {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .ad img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      .promo {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        display: flex;
+        align-items: stretch;
+        font-family: TopazPlus, monospace;
+        font-size: 0.7rem;
+        line-height: 1;
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+      }
+
+      .promo-panel {
+        max-width: 0;
+        overflow: hidden;
+        transition: max-width 0.45s ease-in-out;
+        background: rgba(0, 0, 0, 0.35);
+      }
+
+      .promo-panel a {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        white-space: nowrap;
+        padding: 0 0 0 0.45rem;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .promo-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.45rem;
+        background: rgba(0, 0, 0, 0.35);
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .promo-tab .paw {
+        width: 0.95rem;
+        height: 0.95rem;
+        image-rendering: pixelated;
+        transition: transform 0.45s ease-in-out;
+      }
+
+      .promo:hover .promo-panel,
+      .promo:focus-within .promo-panel {
+        max-width: 20rem;
+      }
+
+      .promo:hover .paw,
+      .promo:focus-within .paw {
+        transform: rotate(360deg);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <a class="ad" id="ad" href="/" target="_blank" rel="noopener">
+        <img id="img" alt="" />
+      </a>
+      <div class="promo">
+        <span class="promo-panel">
+          <a id="promo-link" href="/#petads" target="_blank" rel="noopener">
+            learn more about petAds
+          </a>
+        </span>
+        <a class="promo-tab" href="/#petads" target="_blank" rel="noopener">
+          <span>petAds</span>
+          <img class="paw" src="/petads/paw.png" alt="" />
+        </a>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var img = document.getElementById("img");
+        var ad = document.getElementById("ad");
+        var promo = document.getElementById("promo-link");
+
+        function fallback(status, message) {
+          img.src =
+            Math.random() < 0.5
+              ? "https://http.dog/" + status + ".jpg"
+              : "https://http.cat/" + status;
+          img.alt = status + ": " + message;
+        }
+
+        function load() {
+          fetch("/api/ads/random")
+            .then(function (res) {
+              return res
+                .json()
+                .catch(function () {
+                  return {};
+                })
+                .then(function (data) {
+                  if (!res.ok)
+                    throw { status: res.status, message: data.message };
+                  return data;
+                });
+            })
+            .then(function (data) {
+              img.src = data.image_url;
+              img.alt = "ad for " + data.username;
+              ad.href = data.ad_url;
+              promo.textContent = "from " + data.username + ", learn more @";
+            })
+            .catch(function (e) {
+              fallback(e.status || 0, e.message || "No ads yet");
+            });
+        }
+
+        load();
+        setInterval(load, 30000);
+      })();
+    </script>
+  </body>
+</html>
