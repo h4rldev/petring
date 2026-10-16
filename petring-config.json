@@ -1,0 +1,12 @@
+{
+  "port": 8080,
+  "internal_log_level": "info",
+  "db_path": "petring.db",
+  "server_name": "petring",
+  "server_url": "https://webring.pet",
+  "cors_origins": ["*"],
+  "cors_credentials": false,
+  "url_reachability": false,
+  "log_access": true,
+  "access_log_file": "chicken.log"
+}
