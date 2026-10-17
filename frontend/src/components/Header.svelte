@@ -43,7 +43,7 @@
  }
 
  .bar {
-   @apply mx-auto flex max-w-[60rem] flex-wrap items-center gap-x-5 gap-y-1 border-2 border-(--color-surface-2) bg-(--color-primary) px-5 py-3;
+   @apply mx-auto flex max-w-[60rem] flex-wrap items-center gap-x-5 gap-y-1 border-2 border-(--color-surface-2) bg-(--color-primary) px-5 py-3 max-sm:items-start;
    border-style: outset;
  }
 
@@ -61,7 +61,7 @@
  }
 
  nav {
-   @apply flex flex-wrap gap-x-4 gap-y-0.5;
+   @apply flex flex-wrap gap-x-4 gap-y-0.5 max-sm:ml-auto max-sm:flex-col max-sm:items-end;
  }
 
  nav a,
@@ -92,6 +92,6 @@
  }
  
  .session {
-   @apply ml-auto flex items-center gap-x-4;
+   @apply ml-auto flex items-center gap-x-4 max-sm:ml-0 max-sm:w-full max-sm:justify-end;
  }
 </style>

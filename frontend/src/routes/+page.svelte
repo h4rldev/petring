@@ -120,7 +120,7 @@
 <section class="cell dither dither-corner" id="ring">
   <h2>Add the ring to your site</h2>
   <p class="lede">
-    Verified inn the ring? Embed the nav widget so visitors can hop member to member. Enter your
+    Verified in the ring? Embed the nav widget so visitors can hop member to member. Enter your
     username to preview it and get your snippet:
   </p>
   <div class="ring-demo">
@@ -234,7 +234,7 @@
 
  .join {
    @apply grid gap-x-10 gap-y-8;
-   grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+   grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
  }
 
  .join h3 {
