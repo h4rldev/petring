@@ -428,6 +428,12 @@ export const groups: Group[] = [
         try: false,
       },
       {
+        method: "DELETE",
+        path: "/api/admin/access-log",
+        desc: "Truncate the on-disk access log. Visit statistics are untouched.",
+        returns: "{message}",
+      },
+      {
         method: "GET",
         path: "/api/admin/newsletter",
         desc: "All posts incl. drafts and scheduled.",

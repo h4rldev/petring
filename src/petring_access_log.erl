@@ -1,5 +1,5 @@
 -module (petring_access_log).
--export ([middleware/0]).
+-export ([middleware/0, clear/0]).
 
 middleware() ->
   Enabled = 
@@ -33,6 +33,16 @@ log(Req, Next, File) ->
   write(File, Line),
   Result.
 
+-spec clear() -> ok | {error, no_file | term()}.
+clear() ->
+  case petring_config:get(access_log_file) of
+    "" -> {error, no_file};
+    File ->
+      case file:write_file(File, <<>>) of
+        ok -> ok;
+        {error, Reason} -> {error, Reason}
+      end
+  end.
 
 -spec write(File :: string(), Line :: unicode:chardata()) -> ok.
 write("", Line) ->

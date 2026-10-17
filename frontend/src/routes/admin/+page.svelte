@@ -19,6 +19,7 @@
  let busy = $state<string | null>(null);
  let member_count = $state(0);
  let ad_count = $state(0);
+ let log_msg = $state<string | null>(null);
 
  const num = (n?: number) =>
    (n ?? 0).toLocaleString('en');
@@ -56,6 +57,20 @@
    }
  }
 
+ async function clear_log() {
+   busy = 'log';
+   error = null;
+   log_msg = null;
+
+   try {
+     log_msg = (await api.admin.clear_access_log()).message;
+   } catch (e) {
+     error = (e as Error).message;
+   } finally {
+     busy = null;
+   }
+ }
+ 
  async function logout() {
    await auth.logout();
    goto('/');
@@ -88,8 +103,6 @@
       <div class="stat"><span class="num">{num(ad_count)}</span><span class="label">ads</span></div>
     </div>
   </section>
-
-
   
   <AdminCell name="pending-users" title={`Pending users (${users.length})`}>
     {#if users.length === 0}
@@ -149,6 +162,15 @@
   <AdminAccount />
   <AdminMembers />
   <AdminWebhooks />
+
+  <AdminCell name="maintenance" title="Maintenance">
+    <p class="muted mb-3">Truncate the on-disk access log. Visit statistics are untouched.</p>
+    <div class="row">
+      <button type="button" disabled={busy !== null} onclick={clear_log}>Clear access log</button>
+      {#if log_msg}<span class="muted">{log_msg}</span>{/if}
+    </div>
+  </AdminCell>
+  
   <AdminBlockedWords />
 {/if}
 

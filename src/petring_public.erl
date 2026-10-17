@@ -196,7 +196,7 @@ sitemap(_Req) ->
   Body = iolist_to_binary([
     <<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n">>,
     <<"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n">>,
-    [url_tag([Site, P]) || P <- ["/", "/newsletter/", "/docs/", "/login/"]],
+    [url_tag([Site, P]) || P <- ["/", "/newsletter/", "/docs/", "/login/", "/privacy/"]],
     [url_tag([Site, "/newsletter/", slug_of(R), "/"]) || R <- newsletter_rows()],
     <<"</urlset>\n">>
   ]),

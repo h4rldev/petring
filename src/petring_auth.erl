@@ -51,23 +51,23 @@ login(Req) ->
     {ok, Body} ->
       Username = maps:get(<<"username">>, Body, <<>>),
       Password = maps:get(<<"password">>, Body, <<>>),
-      do_login(Username, Password);
+      do_login(Req, Username, Password);
     error ->
       petring_respond:error(400, <<"Invalid JSON body">>)
   end.
 
-do_login(Username, Password) ->
+do_login(Req, Username, Password) ->
   case fetch_account(Username) of
     {ok, Account} ->
       case verify_password(Password, maps:get("password_hash", Account)) of
-        true -> issue_session(Account);
+        true -> issue_session(Req, Account);
         false -> petring_respond:error(401, <<"Invalid credentials">>)
       end;
     {error, _} ->
       petring_respond:error(401, <<"Invalid credentials">>)
   end.
 
-issue_session(Account) ->
+issue_session(Req, Account) ->
   case petring_secrets:get_jwt_secret() of
     {ok, Secret} when is_binary(Secret) ->
       Username = maps:get("username", Account),
@@ -77,7 +77,8 @@ issue_session(Account) ->
       case errm_jwt:sign(Claims, Secret, hs256, #{ttl => ?SESSION_TTL}) of
         {ok, Token} ->
           Cookie = errm_http_cookie:set_cookie(<<"session">>, Token,
-            #{path => <<"/">>, http_only => true, same_site => lax, max_age => ?SESSION_TTL}),
+            #{path => <<"/">>, http_only => true, secure => is_secure(Req),
+              same_site => lax, max_age => ?SESSION_TTL}),
           {ok, Response} = petring_respond:ok(
             #{<<"username">> => Username, <<"role">> => Role},
             [<<"username">>, <<"role">>]),
@@ -242,19 +243,19 @@ change_username(Req) ->
     true ->
       case body_map(Req) of
         {ok, Body} ->
-          rename_account(Name, maps:get(<<"username">>, Body, <<>>), Self);
+          rename_account(Req, Name, maps:get(<<"username">>, Body, <<>>), Self);
         error ->
           petring_respond:error(400, <<"Invalid JSON body">>)
       end
   end.
 
-rename_account(Name, NewName, Self) ->
+rename_account(Req, Name, NewName, Self) ->
   case valid_username(NewName) of
     false -> petring_respond:error(400, <<"Invalid username">>);
-    true -> do_rename_account(Name, NewName, Self)
+    true -> do_rename_account(Req, Name, NewName, Self)
   end.
 
-do_rename_account(Name, NewName, Self) ->
+do_rename_account(Req, Name, NewName, Self) ->
   case petring_db:db() of
     {ok, Db} ->
       try errm_sqlite:exec(Db,
@@ -265,7 +266,7 @@ do_rename_account(Name, NewName, Self) ->
           case Self of
             true ->
               case fetch_account(NewName) of
-                {ok, Account} -> issue_session(Account);
+                {ok, Account} -> issue_session(Req, Account);
                 {error, _} -> petring_respond:error(500, <<"Database error">>)
               end;
             false ->
@@ -328,6 +329,9 @@ valid_chars(_) -> false.
 valid_role(<<"superadmin">>) -> true;
 valid_role(<<"admin">>) -> true;
 valid_role(_) -> false.
+
+is_secure(Req) ->
+  maps:get(<<"x-forwarded-proto">>, maps:get(headers, Req, #{}), <<"http">>) =:= <<"https">>.
 
 hash_password(Password) ->
   case errm_argon:hash(binary_to_list(iolist_to_binary(Password))) of
