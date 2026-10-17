@@ -288,6 +288,72 @@
     }
 }
 
+/* :visited anchors whose colour comes from a *transitioning* registered
+   custom property paint the UA VisitedText colour for a frame after a theme
+   switch. Anchors read a no-transition per-theme snapshot (--v-*) and animate
+   the restricted properties on the element instead. Unlayered so it beats
+   Tailwind's @layer utilities. */
+:root,
+[data-theme="dawn"] {
+    --v-text: var(--dawn-text);
+    --v-subtext: var(--dawn-subtext1);
+    --v-link: var(--dawn-indigo);
+    --v-accent: var(--dawn-tangerine);
+    --v-on-accent: #2a1600;
+    --v-secondary: var(--dawn-recess);
+    --v-surface-2: var(--dawn-surface1);
+}
+
+[data-theme="dusk"] {
+    --v-text: var(--dusk-text);
+    --v-subtext: var(--dusk-subtext1);
+    --v-link: var(--dusk-indigo);
+    --v-accent: var(--dusk-tangerine);
+    --v-on-accent: var(--dusk-backdrop);
+    --v-secondary: var(--dusk-recess);
+    --v-surface-2: var(--dusk-surface1);
+}
+
+[data-theme="midnight"] {
+    --v-text: var(--midnight-text);
+    --v-subtext: var(--midnight-subtext1);
+    --v-link: var(--midnight-indigo);
+    --v-accent: var(--midnight-tangerine);
+    --v-on-accent: var(--midnight-backdrop);
+    --v-secondary: var(--midnight-recess);
+    --v-surface-2: var(--midnight-surface1);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --v-text: var(--midnight-text);
+        --v-subtext: var(--midnight-subtext1);
+        --v-link: var(--midnight-indigo);
+        --v-accent: var(--midnight-tangerine);
+        --v-on-accent: var(--midnight-backdrop);
+        --v-secondary: var(--midnight-recess);
+        --v-surface-2: var(--midnight-surface1);
+    }
+}
+
+a,
+a * {
+    transition:
+        color 0.3s ease-in-out,
+        background-color 0.3s ease-in-out,
+        border-color 0.3s ease-in-out;
+}
+
+a {
+    --color-text: var(--v-text);
+    --color-subtext: var(--v-subtext);
+    --color-link: var(--v-link);
+    --color-accent: var(--v-accent);
+    --color-on-accent: var(--v-on-accent);
+    --color-secondary: var(--v-secondary);
+    --color-surface-2: var(--v-surface-2);
+}
+
 @layer base {
     :root {
         transition:
