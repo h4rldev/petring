@@ -4,6 +4,7 @@
       <a href="https://github.com/h4rldev/petring">GitHub</a>
       <a href="/newsletter/feed.xml" rel="external">RSS</a>
       <a href="/docs/">API</a>
+      <a href="/privacy/">Privacy</a>
     </nav>
   </div>
 </footer>

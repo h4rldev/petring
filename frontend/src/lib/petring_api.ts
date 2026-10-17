@@ -349,6 +349,9 @@ export const api = {
         ids ? { ids } : undefined,
       ),
 
+    clear_access_log: (): Promise<{ message: string }> =>
+      request("/api/admin/access-log", "DELETE"),
+
     list_newsletter: async (): Promise<NewsletterEntry[]> =>
       (
         await request<{ newsletter: NewsletterEntry[] }>(

@@ -9,7 +9,8 @@
   update_webhook/1, delete_webhook/1,
   test_webhook/1, all_users/1, all_ads/1,
   create_user/1, update_user/1,
-  regenerate_token/1, create_ad/1, update_ad/1
+  regenerate_token/1, create_ad/1, update_ad/1,
+  clear_access_log/1
 ]).
 
 -spec unverified_users(Req :: errm_http:request()) -> {ok, errm_http:response()}.
@@ -367,6 +368,14 @@ update_ad(Req) ->
           end;
         _ -> petring_respond:error(404, <<"Ad not found">>)
       end
+  end.
+
+-spec clear_access_log(Req :: errm_http:request()) -> {ok, errm_http:response()}.
+clear_access_log(_Req) ->
+  case petring_access_log:clear() of
+    ok -> petring_respond:ok(#{<<"message">> => <<"Access log cleared">>}, [<<"message">>]);
+    {error, no_file} -> petring_respond:error(400, <<"Access log is not written to a file">>);
+    {error, _} -> petring_respond:error(500, <<"Failed to clear access log">>)
   end.
 
 do_update_ad(Name, NewImage, NewAdUrl) ->

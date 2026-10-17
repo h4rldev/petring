@@ -73,6 +73,8 @@ get() ->
     {post, ["api", "admin", "notifications", "read"], fun petring_admin:read_notifications/1},
     {delete, ["api", "admin", "notifications"], fun petring_admin:clear_notifications/1},
 
+    {delete, ["api", "admin", "access-log"], fun petring_admin:clear_access_log/1},
+
     {post, ["api", "admin", "newsletter"], fun petring_newsletter:create/1},
     {get, ["api", "admin", "newsletter"], fun petring_newsletter:list_all/1},
     {patch, ["api", "admin", "newsletter", ":id"], fun petring_newsletter:update/1},
