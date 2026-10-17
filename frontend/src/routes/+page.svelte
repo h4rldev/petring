@@ -4,28 +4,40 @@
  import ManageEntry from '$components/ManageEntry.svelte';
  import { api, type NewsletterEntry, type RandomAd, type Stats } from '$lib/petring_api';
  import { excerpt } from '$lib/markdown';
+ import { theme } from '$lib/theme.svelte';
 
  let newsletter = $state<NewsletterEntry[]>([]);
  let ad = $state<RandomAd | null>(null);
  let stats = $state<Stats | null>(null);
  let error = $state<string | null>(null);
  let origin = $state('');
- let copied = $state(false);
+ let copied = $state<Record<string, boolean>>({});
  let preview = $state<HTMLIFrameElement>();
+ let ring_name = $state('');
+ let ring_preview_el = $state<HTMLIFrameElement>();
 
+ const ring_slug = $derived(ring_name.trim() || 'YOURNAME');
+ 
  const embed = $derived(
-  `<iframe src="${origin}/petads/" width="300" height="300" allowtransparency="true" frameborder="0"></iframe>`
+   `<iframe src="${origin}/petads/" width="300" height="300" allowtransparency="true" frameborder="0"></iframe>`
  );
 
+ const ring_embed = $derived(
+   `<iframe src="${origin}/ring/?name=${ring_slug}" width="100%" height="32" allowtransparency="true" frameborder="0"></iframe>`
+ );
+
+ const ring_preview = $derived(`/ring/?name=${encodeURIComponent(ring_name.trim())}&theme=${theme.value}`);
+ 
  $effect(() => {
    if (preview) preview.src = '/petads/';
+   if (ring_preview_el) ring_preview_el.src = ring_preview;
  });
 
- async function copy_embed() {
+ async function copy(key: string, text: string) {
    try {
-     await navigator.clipboard.writeText(embed);
-     copied = true;
-     setTimeout(() => (copied = false), 1500);
+     await navigator.clipboard.writeText(text);
+     copied[key] = true;
+     setTimeout(() => (copied[key] = false), 1500);
    } catch {}
  }
 
@@ -105,6 +117,33 @@
   </div>
 </section>
 
+<section class="cell dither dither-corner" id="ring">
+  <h2>Add the ring to your site</h2>
+  <p class="lede">
+    Verified inn the ring? Embed the nav widget so visitors can hop member to member. Enter your
+    username to preview it and get your snippet:
+  </p>
+  <div class="ring-demo">
+    <label class="field">
+      <span>username</span>
+      <input bind:value={ring_name} maxlength="32" autocomplete="off" spellcheck="false" placeholder="your name" />
+    </label>
+    <iframe bind:this={ring_preview_el} height="34" title="petRing widget preview"></iframe>
+  </div>
+  <div class="embed">
+    <div class="embed-head">
+      <p class="hint">Copy this into your page:</p>
+      <button class="button" onclick={() => copy('ring', ring_embed)}>{copied.ring ? 'Copied!' : 'Copy'}</button>
+    </div>
+    <code>{ring_embed}</code>
+  </div>
+  <p class="hint">
+    Prefer to roll your own? Point any link at <code>{`/user/${ring_slug}/prev`}</code>,
+    <code>{`/user/${ring_slug}/random`}</code> or <code>{`/user/${ring_slug}/next`}</code>, each
+    redirects to that member's site. Full list in the <a href="/docs/">API docs</a>.
+  </p>
+</section>
+
 <section class="cell dither dither-corner" id="petads">
   <h2>What is petAds?</h2>
   <p class="lede">
@@ -115,7 +154,7 @@
     <div class="embed">
       <p class="hint">Copy this into your page:</p>
       <code>{embed}</code>
-      <button class="button" onclick={copy_embed}>{copied ? 'Copied!' : 'Copy'}</button>
+      <button class="button" onclick={() => copy('petads', embed)}>{copied.petads ? 'Copied!' : 'Copy'}</button>
     </div>
   </div>
 </section>
@@ -149,7 +188,7 @@
    @apply mb-4 flex flex-wrap gap-2;
  }
 
-  .buttons {
+ .buttons {
    @apply flex flex-wrap gap-2;
  }
 
@@ -158,7 +197,7 @@
  }
 
  .entries article + article {
-  @apply border-t-2 border-(--color-surface-2) pt-6;
+   @apply border-t-2 border-(--color-surface-2) pt-6;
  }
  
  article h3 {
@@ -224,31 +263,90 @@
    @apply text-sm text-(--color-subtext);
  }
 
-   #petads .petads {
-    @apply flex flex-wrap items-start gap-6;
-  }
+ #petads .petads {
+   @apply flex flex-wrap items-start gap-6;
+ }
 
-  #petads iframe {
-    @apply border-2 border-(--color-surface-2);
-    border-style: outset;
-    width: 300px;
-    max-width: 100%;
-    height: 300px;
-  }
+ #petads iframe {
+   @apply border-2 border-(--color-surface-2);
+   border-style: outset;
+   width: 300px;
+   max-width: 100%;
+   height: 300px;
+ }
 
-  #petads .embed {
-    @apply flex min-w-[16rem] flex-1 flex-col items-start gap-2;
-  }
+ #petads .embed,
+ #ring .embed {
+   @apply flex flex-col items-start gap-2;
+ }
 
-  #petads .hint {
-    @apply text-sm text-(--color-subtext);
-  }
+ #petads .embed {
+   @apply min-w-[16rem] flex-1;
+ }
 
-  #petads code {
-    @apply block w-full overflow-x-auto whitespace-pre border-2 border-(--color-surface-2) bg-(--color-bg) px-3 py-2 text-[.8rem];
-  }
+ #petads .embed code,
+ #ring .embed code {
+   @apply block w-full border-2 border-(--color-surface-2) bg-(--color-bg) px-3 py-2 text-[.8rem];
+   white-space: pre-wrap;
+   word-break: break-all;
+ }
 
-  #petads button {
-    @apply cursor-pointer;
-  }
+ #petads .hint,
+ #ring .hint {
+   @apply text-sm text-(--color-subtext);
+ }
+
+ #petads button,
+ #ring button {
+   @apply cursor-pointer;
+ }
+
+ #ring .ring-demo {
+   @apply mb-4;
+   display: grid;
+   grid-template-columns: minmax(0, 20rem) minmax(0, 20rem);
+   justify-content: center;
+   align-items: center;
+   column-gap: 1.5rem;
+   row-gap: 0.25rem;
+ }
+
+ #ring .ring-demo .field {
+   display: contents;
+ }
+
+ #ring .ring-demo .field span {
+   @apply text-sm text-(--color-subtext);
+   grid-column: 1;
+   grid-row: 1;
+ }
+
+ #ring .ring-demo .field input {
+   grid-column: 1;
+   grid-row: 2;
+ }
+
+ #ring .ring-demo iframe {
+   @apply border-0;
+   grid-column: 2;
+   grid-row: 2;
+   width: 100%;
+   height: 34px;
+ }
+
+ #ring .embed {
+   @apply mb-4;
+ }
+ 
+ #ring .embed-head {
+   @apply mb-1 flex w-full flex-wrap items-center justify-between gap-3;
+ }
+
+ #ring .embed-head .hint {
+   @apply mb-0;
+ }
+ 
+ #ring .hint code {
+   @apply bg-(--color-bg) px-1;
+ }
 </style>

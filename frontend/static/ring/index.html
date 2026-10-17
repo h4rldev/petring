@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>petRing</title>
+    <style>
+      @font-face {
+        font-family: TopazPlus;
+        src: url("/ring/topaz.ttf") format("truetype");
+        font-display: swap;
+      }
+
+      :root {
+        --bar-bg: #efeff5;
+        --bar-line: #bdbccd;
+        --bar-text: #605b76;
+        --bar-accent: #ff9000;
+      }
+
+      :root[data-theme="dusk"] {
+        --bar-bg: #333046;
+        --bar-line: #53506d;
+        --bar-text: #b9b6e2;
+        --bar-accent: #f1b26a;
+      }
+
+      :root[data-theme="midnight"] {
+        --bar-bg: #241e2e;
+        --bar-line: #494559;
+        --bar-text: #bdbade;
+        --bar-accent: #fcc578;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+
+      body {
+        font-family: TopazPlus, monospace;
+        font-size: 0.75rem;
+        line-height: 1;
+      }
+
+      nav {
+        box-sizing: border-box;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border: 2px solid var(--bar-line);
+        background: var(--bar-bg);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-right: auto;
+        padding: 0 0.55rem;
+        color: var(--bar-accent);
+        letter-spacing: 0.04em;
+      }
+
+      .brand img {
+        width: 0.9rem;
+        height: 0.9rem;
+        image-rendering: pixelated;
+      }
+
+      a {
+        display: flex;
+        align-items: center;
+        padding: 0 0.6rem;
+        border-left: 1px solid var(--bar-line);
+        color: var(--bar-text);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      a:hover,
+      a:focus-visible {
+        background: rgba(255, 144, 0, 0.18);
+        color: var(--bar-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <span class="brand"><img src="/petads/paw.png" alt="" />petRing</span>
+      <span id="links" style="display: contents"></span>
+    </nav>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.search);
+        var t = params.get("theme");
+        document.documentElement.dataset.theme =
+          t === "dawn" || t === "dusk" || t === "midnight"
+            ? t
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "midnight"
+              : "dawn";
+
+        var name = params.get("name");
+        var links = name
+          ? [
+              {
+                href: "/user/" + encodeURIComponent(name) + "/prev",
+                label: "\u2190 prev",
+              },
+              {
+                href: "/user/" + encodeURIComponent(name) + "/random",
+                label: "random",
+              },
+              {
+                href: "/user/" + encodeURIComponent(name) + "/next",
+                label: "next \u2192",
+              },
+            ]
+          : [{ href: "/", label: "visit \u2197" }];
+
+        var host = document.getElementById("links");
+        links.forEach(function (l) {
+          var a = document.createElement("a");
+          a.href = l.href;
+          a.target = "_top";
+          a.textContent = l.label;
+          host.appendChild(a);
+        });
+      })();
+    </script>
+  </body>
+</html>
