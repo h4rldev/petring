@@ -90,7 +90,7 @@
  }
 </script>
 
-<svelte:head><title>API reference — petRing</title></svelte:head>
+<svelte:head><title>API reference - petRing</title></svelte:head>
 
 <section class="cell dither dither-corner">
   <h1>API reference</h1>
@@ -220,7 +220,7 @@
  }
  
  .row {
-   @apply flex w-full cursor-pointer items-center justify-start gap-3 border-0 bg-transparent py-2 text-left;
+   @apply flex h-auto w-full cursor-pointer flex-wrap items-center justify-start gap-x-3 gap-y-1 border-0 bg-transparent py-2 text-left max-sm:items-start;
  }
  
  .method {
@@ -252,15 +252,15 @@
  }
  
  .path {
-   @apply font-mono text-sm;
+   @apply break-words font-mono text-sm;
  }
  
  .desc {
-   @apply text-sm text-(--color-subtext);
+   @apply min-w-0 basis-full pl-16 text-sm text-(--color-subtext) sm:basis-auto sm:pl-0;
  }
  
  .try {
-   @apply pb-3 pl-[5.5rem];
+   @apply pb-3 pl-0 sm:pl-[5.5rem];
  }
  
  label {
