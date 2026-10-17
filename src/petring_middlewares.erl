@@ -18,6 +18,12 @@ get() ->
   }),
 
   [
+    petring_cache:middleware([
+      {<<"/_app/immutable/">>, <<"public, max-age=31536000, immutable">>},
+      {<<"/halftone.svg">>, <<"public, max-age=604800">>},
+      {<<"/paw.">>, <<"public, max-age=604800">>},
+      {<<"/petring-button-">>, <<"public, max-age=604800">>}
+    ]),
     petring_access_log:middleware(),
     petring_visits:middleware(),
     errm_http_compress:compress(Compression),
