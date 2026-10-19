@@ -220,10 +220,6 @@
    @apply text-(--color-subtext);
  }
 
- .err {
-   @apply text-(--color-error);
- }
-
  .more {
    @apply text-[.85rem] font-bold text-(--color-accent) no-underline;
  }

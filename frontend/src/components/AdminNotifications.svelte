@@ -105,7 +105,7 @@
  @reference '$appcss';
 
  .tools {
-   @apply mb-3 flex items-center justify-end gap-2;
+   @apply mb-3 flex flex-wrap items-center justify-end gap-2;
  }
 
  .tools select {
@@ -124,7 +124,7 @@
    @apply border-b border-(--color-surface-2) pb-2;
  }
 
-  .mark {
+ .mark {
    @apply flex h-auto w-full items-center justify-between gap-4 border-0 bg-transparent px-0 py-0 text-left text-[.9rem] leading-normal tracking-normal;
  }
 
@@ -134,7 +134,7 @@
 
  .items li.unread .mark:hover {
    @apply text-(--color-accent);
-  }
+ }
 
  .items li.unread .mark {
    @apply font-semibold;
@@ -150,9 +150,5 @@
 
  .muted {
    @apply text-(--color-subtext);
- }
-
- .err {
-   @apply text-(--color-error);
  }
 </style>

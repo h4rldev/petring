@@ -217,10 +217,6 @@
    @apply text-(--color-subtext);
  }
 
- .err {
-   @apply text-(--color-error);
- }
-
  .welcome-top {
    @apply mb-4 flex flex-wrap items-center justify-between gap-4;
  }

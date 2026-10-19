@@ -291,10 +291,6 @@
     @apply text-(--color-subtext);
   }
 
-  .err {
-    @apply text-(--color-error);
-  }
-
   .forget {
     @apply shrink-0 text-[.85rem];
   }

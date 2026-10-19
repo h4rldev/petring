@@ -75,10 +75,6 @@
     @apply text-(--color-accent);
   }
 
-  .err {
-    @apply text-(--color-error);
-  }
-
   .muted {
     @apply text-(--color-subtext);
   }

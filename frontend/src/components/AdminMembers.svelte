@@ -226,7 +226,7 @@
         <form onsubmit={save_member}>
           <label class="field"><span>username</span><input bind:value={m_username} disabled={selected !== CREATE} /></label>
           <label class="field"><span>url</span><input bind:value={m_url} /></label>
-          <label class="field"><span>contact</span><input bind:value={m_contact} /></label>
+          <label class="field"><span>contact</span><textarea bind:value={m_contact} rows="3"></textarea></label>
           <div class="row">
             <button type="submit" disabled={busy}>{selected === CREATE ? 'Create' : 'Save'}</button>
             {#if selected !== CREATE}
@@ -342,13 +342,5 @@
 
  .muted {
    @apply text-(--color-subtext);
- }
-
- .err {
-   @apply text-(--color-error);
- }
-
- .ok {
-   @apply text-(--color-confirm);
  }
 </style>
