@@ -203,12 +203,4 @@
  .danger {
    @apply text-(--color-error);
  }
-
- .ok {
-   @apply text-(--color-confirm);
- }
-
- .err {
-   @apply text-(--color-error);
- }
 </style>

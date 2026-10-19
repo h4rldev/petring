@@ -85,12 +85,4 @@
  .row {
    @apply flex flex-wrap gap-2;
  }
-
- .err {
-   @apply text-(--color-error);
- }
-
- .ok {
-   @apply text-(--color-confirm);
- }
 </style>

@@ -547,4 +547,17 @@ a {
     .swatch.is-accent code {
         @apply font-bold text-(--color-accent);
     }
+
+    .ok,
+    .err {
+        @apply my-3 break-words border-2 px-3 py-2 text-sm;
+    }
+
+    .ok {
+        @apply border-(--color-confirm) text-(--color-confirm);
+    }
+
+    .err {
+        @apply border-(--color-error) text-(--color-error);
+    }
 }

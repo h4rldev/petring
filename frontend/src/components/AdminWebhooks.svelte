@@ -258,14 +258,6 @@
    @apply text-(--color-subtext);
  }
 
- .err {
-   @apply break-all text-(--color-error);
- }
-
- .ok {
-   @apply break-all text-(--color-confirm);
- }
-
  .url {
    @apply break-all;
  }

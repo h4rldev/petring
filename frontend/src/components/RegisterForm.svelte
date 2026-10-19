@@ -75,10 +75,6 @@
    @apply text-sm text-(--color-subtext);
  }
 
- .err {
-   @apply text-(--color-error);
- }
-
  .go {
    @apply self-start;
  }

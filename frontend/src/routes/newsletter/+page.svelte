@@ -83,10 +83,6 @@
 <style>
  @reference '$appcss';
 
- .err {
-   @apply text-(--color-error);
- }
-
  .muted {
    @apply text-(--color-subtext);
  }
