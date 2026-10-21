@@ -1,5 +1,12 @@
 # petRing & petAds
 
+> [!NOTE]
+> petRing has moved!
+>
+> petRing has moved to a new remote @ git.scug.io
+>
+> See [here](https://git.scug.io/paws/petring)
+
 > [!WARNING]
 > This project is in an early ALPHA and is not ready for any serious usecase
 >
